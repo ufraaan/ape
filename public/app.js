@@ -1,23 +1,63 @@
 document.documentElement.dataset.enhanced = ''
+document.documentElement.classList.add('m-enter')
 
 const MAX_BYTES = 64 * 1024
 const field = document.querySelector('[data-body]')
 const count = document.querySelector('[data-count]')
+const lines = document.querySelector('[data-lines]')
 const submit = document.querySelector('[data-submit]')
 
-function renderCount(value) {
+function renderMeter(value) {
   const bytes = new TextEncoder().encode(value).length
   const kib = (bytes / 1024).toFixed(1)
   const over = bytes > MAX_BYTES
-  count.textContent = over ? `${kib} KiB of 64 KiB (over limit)` : `${kib} KiB of 64 KiB`
-  count.toggleAttribute('data-over', over)
-  if (over) field.setAttribute('aria-invalid', 'true')
-  else field.removeAttribute('aria-invalid')
+  if (count) {
+    count.textContent = over ? `${kib} KiB of 64 KiB (over limit)` : `${kib} KiB of 64 KiB`
+    count.toggleAttribute('data-over', over)
+  }
+  if (lines) {
+    const total = value === '' ? 0 : value.split('\n').length
+    lines.textContent = `${total} ${total === 1 ? 'line' : 'lines'}`
+  }
+  if (field) {
+    if (over) field.setAttribute('aria-invalid', 'true')
+    else field.removeAttribute('aria-invalid')
+  }
 }
 
-if (field && count && submit) {
-  renderCount(field.value)
-  field.addEventListener('input', () => renderCount(field.value))
+if (field) {
+  let queued = false
+  renderMeter(field.value)
+  field.addEventListener('input', () => {
+    if (queued) return
+    queued = true
+    requestAnimationFrame(() => {
+      queued = false
+      renderMeter(field.value)
+    })
+  })
+
+  let sending = false
+  field.form?.addEventListener('submit', (event) => {
+    if (sending) {
+      event.preventDefault()
+      return
+    }
+    if (!field.form.checkValidity()) return
+    sending = true
+    if (submit) {
+      submit.setAttribute('data-busy', '')
+      submit.textContent = 'Creating paste'
+    }
+  })
+
+  window.addEventListener('pageshow', () => {
+    sending = false
+    if (submit) {
+      submit.removeAttribute('data-busy')
+      submit.textContent = 'Create paste'
+    }
+  })
 }
 
 const timers = new WeakMap()
