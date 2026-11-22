@@ -7,7 +7,6 @@
   --border: #d5d8dc;
   --line: #ebecef;
   --focus: #37639b;
-  --action-bg: #edf3fc;
   --danger: #a12528;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
@@ -139,11 +138,6 @@ h2 {
   border: 1px solid var(--border);
   border-radius: 0.625rem;
   background: var(--surface);
-}
-
-.editor:focus-within {
-  border-color: var(--focus);
-  box-shadow: 0 0 0 2px var(--action-bg);
 }
 
 textarea {
