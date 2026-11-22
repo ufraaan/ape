@@ -10,5 +10,6 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["scripts/**/*.ts", "types/**/*.d.ts"]
+  "include": ["scripts/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["scripts/paste-highlight.ts"]
 }
