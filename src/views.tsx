@@ -83,6 +83,7 @@ function page(options: {
   showNewPaste?: boolean
   turnstileSiteKey?: string
   showFooter?: boolean
+  canonicalPath?: string
 }): Markup {
   return html`<!doctype html>
 <html lang="en">
@@ -92,6 +93,9 @@ function page(options: {
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f8f5ef" />
     <title>${options.title}</title>
+    ${options.canonicalPath
+      ? html`<link rel="canonical" href="${options.canonicalPath}" />`
+      : ''}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/app.css" />
     <script src="/app.js" defer></script>
@@ -205,7 +209,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
     ${token
       ? html`<section class="token" aria-labelledby="token-heading">
           <div>
-            <p class="token-heading" id="token-heading">Deletion token, shown once</p>
+            <h2 class="token-heading" id="token-heading">Deletion token, shown once</h2>
             <code class="token-value" id="delete-token-value">${token}</code>
           </div>
           ${copyButton('--copy-token', 'Copy token', 'delete-token-value')}
@@ -241,6 +245,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
     title: `p/${options.id} — Ape`,
     main,
     showNewPaste: true,
+    canonicalPath: path,
   })
 }
 

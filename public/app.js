@@ -60,7 +60,9 @@ function selectText(target) {
 async function copy(button, target, command) {
   let text = ''
   if (command === '--copy-link') {
-    text = location.origin + location.pathname
+    const canonical = document.querySelector('link[rel="canonical"]')
+    const href = canonical?.getAttribute('href')
+    text = href ? new URL(href, location.origin).href : location.origin + location.pathname
   } else if (target) {
     text = target.matches('input, textarea') ? target.value : target.textContent ?? ''
   }
