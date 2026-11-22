@@ -1,6 +1,25 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { detectLanguage, highlight } from './highlight-auto.ts'
+import { detectLanguage, highlight } from './prism-auto.ts'
+
+const c = `#include <stdio.h>
+
+int main() {
+    int a, b;
+
+    printf("Enter first number: ");
+    scanf("%d", &a);
+
+    printf("Enter second number: ");
+    scanf("%d", &b);
+
+    int sum = a + b;
+
+    printf("Sum: %d\\n", sum);
+
+    return 0;
+}
+`
 
 const python = `import json
 from pathlib import Path
@@ -30,6 +49,15 @@ const typescript = `interface User { id: number; name: string }
 export function greet(user: User): string {
   return \`hello \${user.name}\`
 }
+`
+
+const jsx = `const Button = ({ label, onSave }) => (
+  <Widget onClick={() => onSave(label)}>{label}</Widget>
+)
+`
+
+const tsx = `type Props = { label: string }
+export const Button = (props: Props) => <Widget>{props.label}</Widget>
 `
 
 const html = `<!doctype html>
@@ -99,11 +127,80 @@ fn main() {
 }
 `
 
+const cpp = `#include <iostream>
+using namespace std;
+
+int main() {
+  cout << "hello" << endl;
+  return 0;
+}
+`
+
+const java = `public class Main {
+    public static void main(String[] args) {
+        System.out.println("hello");
+    }
+}
+`
+
+const yaml = `name: build
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`
+
+const diff = `--- a/src/index.ts
++++ b/src/index.ts
+@@ -1,3 +1,3 @@
+-old line
++new line
+ context
+`
+
+const markdown = `# Title
+
+Some **bold** text and a [link](https://example.com).
+
+- one
+- two
+`
+
 test('detects supported languages', () => {
-  const cases = { python, javascript, typescript, xml: html, css, json, bash, sql, go, rust }
+  const cases = {
+    c,
+    cpp,
+    python,
+    javascript,
+    typescript,
+    jsx,
+    tsx,
+    markup: html,
+    css,
+    json,
+    bash,
+    sql,
+    go,
+    rust,
+    java,
+    yaml,
+    diff,
+    markdown,
+  }
   for (const [language, code] of Object.entries(cases)) {
     assert.equal(detectLanguage(code), language, language)
   }
+})
+
+test('highlights the reported untagged c paste', () => {
+  const rendered = highlight(c)
+  assert.equal(rendered?.language, 'c')
+  assert.ok(rendered.value.includes('class="token keyword"'))
+  assert.ok(rendered.value.includes('class="token string"'))
 })
 
 test('leaves prose and short snippets plain', () => {
@@ -125,6 +222,13 @@ test('leaves unsupported or ambiguous documents plain', () => {
 test('escapes pasted markup in highlighted output', () => {
   const rendered = highlight(python)
   assert.equal(rendered?.language, 'python')
-  assert.ok(rendered.value.includes('&lt;script&gt;'))
+  assert.ok(rendered.value.includes('&lt;script>'))
   assert.ok(!rendered.value.includes('<script>'))
+})
+
+test('escapes markup when the paste itself looks like a document', () => {
+  const rendered = highlight(`${html}<script>alert("xss")</script>\n<img src=x onerror=alert(1)>\n`)
+  assert.ok(rendered)
+  assert.ok(!rendered.value.includes('<script>'))
+  assert.ok(!rendered.value.includes('<img src=x'))
 })

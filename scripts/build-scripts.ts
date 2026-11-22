@@ -12,9 +12,9 @@ const options = {
 await build({
   ...options,
   entryPoints: [fileURLToPath(new URL('paste-highlight.ts', import.meta.url))],
-  outfile: fileURLToPath(new URL('../public/vendor/highlight.js', import.meta.url)),
+  outfile: fileURLToPath(new URL('../public/vendor/prism.js', import.meta.url)),
   banner: {
-    js: '/*! highlight.js v11.12.0 | BSD-3-Clause | Copyright (c) 2006, Ivan Sagalaev */',
+    js: '/*! PrismJS v1.30.0 | MIT | Copyright (c) 2012-2025 Lea Verou and contributors */',
   },
 })
 
