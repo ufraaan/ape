@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 
 const BASE = process.env.SMOKE_BASE_URL ?? 'http://127.0.0.1:8787'
 const ABUSE_EMAIL = process.env.SMOKE_ABUSE_EMAIL ?? ''
+const PERSIST_TO = process.env.SMOKE_PERSIST_TO
 
 let checks = 0
 function check(condition, message) {
@@ -37,7 +38,8 @@ function reportDraft(html) {
 function localSql(command) {
   return execFileSync(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    ['--no-install', 'wrangler', 'd1', 'execute', 'ape', '--local', '--json', '--command', command],
+    ['--no-install', 'wrangler', 'd1', 'execute', 'ape', '--local', '--json',
+      ...(PERSIST_TO ? ['--persist-to', PERSIST_TO] : []), '--command', command],
     { cwd: fileURLToPath(new URL('..', import.meta.url)), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
   )
 }
@@ -71,10 +73,9 @@ check(!pageHtml.includes('<img src=x onerror'), 'view escapes attribute-breakout
 check(pageHtml.includes('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'), 'view contains escaped paste text')
 check(!pageHtml.includes(mainBody), 'view does not echo the raw body')
 check(!pageHtml.includes('deletion token'), 'view has no deletion token')
-check(
-  pageHtml.includes(`<link rel="canonical" href="/${id}" />`),
-  'view declares the short url as canonical',
-)
+check(pageHtml.includes(`<link rel="canonical" href="/${id}" />`), 'view declares the short url as canonical')
+check(pageHtml.includes('data-highlight'), 'view marks the code block for highlighting')
+check(pageHtml.includes('src="/vendor/highlight.js"'), 'view loads the local highlighter')
 if (ABUSE_EMAIL) {
   const draft = reportDraft(pageHtml)
   check(draft?.pathname === ABUSE_EMAIL, 'paste report addresses the configured contact')
@@ -212,6 +213,7 @@ check(
 for (const [path, type] of [
   ['/app.css', 'text/css'],
   ['/app.js', 'text/javascript'],
+  ['/vendor/highlight.js', 'text/javascript'],
   ['/ape-logo.webp', 'image/webp'],
 ]) {
   const asset = await fetch(BASE + path)
@@ -243,6 +245,7 @@ check(home.status === 200, `home: expected 200, got ${home.status}`)
 check(homeHtml.includes('<h1>new paste</h1>'), 'home keeps the compose heading')
 check(homeHtml.includes('action="/pastes"'), 'home keeps the create form')
 check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does not duplicate the new paste link')
+check(!homeHtml.includes('/vendor/highlight.js'), 'compose does not load the highlighter')
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
 check(homeCsp.includes("style-src 'self'"), 'CSP allows the self-hosted stylesheet')

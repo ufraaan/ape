@@ -63,6 +63,7 @@ function page(options: {
   canonicalPath?: string
   reportHref?: string
   showNewPaste?: boolean
+  highlight?: boolean
 }): Markup {
   return html`<!doctype html>
 <html lang="en">
@@ -74,6 +75,7 @@ function page(options: {
     ${options.canonicalPath ? html`<link rel="canonical" href="${options.canonicalPath}" />` : ''}
     <link rel="icon" href="/ape-logo.webp" type="image/webp" />
     <link rel="stylesheet" href="/app.css" />
+    ${options.highlight ? html`<script src="/vendor/highlight.js" defer></script>` : ''}
     <script src="/app.js" defer></script>
     ${options.turnstileSiteKey
       ? html`<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`
@@ -156,6 +158,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
     title: 'paste · ape',
     canonicalPath: path,
     reportHref: options.reportHref,
+    highlight: true,
     main: html`<main id="main" class="wrap main">
       <div class="paste-head">
         <div>
@@ -168,7 +171,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
           <a class="button" href="${path}/raw">raw</a>
         </div>
       </div>
-      <pre class="paste-body" id="paste-body" tabindex="0" aria-label="paste text"><code>${options.body}</code></pre>
+      <pre class="paste-body" id="paste-body" tabindex="0" aria-label="paste text"><code data-highlight>${options.body}</code></pre>
     </main>`,
   })
 }

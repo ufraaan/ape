@@ -3,6 +3,9 @@
   "name": "ape",
   "main": "src/index.ts",
   "compatibility_date": "2026-11-22",
+  "build": {
+    "command": "node scripts/build-highlight.mjs"
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"

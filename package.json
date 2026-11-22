@@ -6,12 +6,15 @@
     "dev": "wrangler dev --test-scheduled",
     "build": "wrangler deploy --dry-run --outdir dist",
     "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/highlight-auto.test.js",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "hono": "^4.13.20"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
+    "highlight.js": "^11.12.0",
     "typescript": "^7.0.2",
     "wrangler": "^4.166.0"
   }
