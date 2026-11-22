@@ -177,6 +177,9 @@ for (const [path, type] of [
   await asset.arrayBuffer()
 }
 
+const appJs = await (await fetch(`${BASE}/app.js`)).text()
+check(appJs.includes('link[rel="canonical"]'), 'copy link reads the canonical url')
+
 const home = await fetch(BASE + '/')
 const homeCsp = home.headers.get('content-security-policy') ?? ''
 await home.text()
