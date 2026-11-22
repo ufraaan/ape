@@ -243,6 +243,7 @@ select {
 .form-actions .button {
   min-block-size: 2rem;
   padding: 0 0.6rem;
+  font-weight: 400;
 }
 
 .button[data-busy] {
