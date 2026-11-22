@@ -21,6 +21,7 @@ await build({
 await build({
   ...options,
   minify: false,
+  loader: { '.txt': 'text' },
   entryPoints: [fileURLToPath(new URL('../src/client/app.ts', import.meta.url))],
   outfile: fileURLToPath(new URL('../public/app.js', import.meta.url)),
 })

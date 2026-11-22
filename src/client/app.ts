@@ -1,4 +1,8 @@
+import apeBanner from './ape-banner.txt'
+
 document.documentElement.dataset.enhanced = ''
+
+console.log(apeBanner.trimEnd())
 
 type CopyCommandEvent = Event & {
   readonly command: string | null
