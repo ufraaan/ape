@@ -4,7 +4,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-22",
   "build": {
-    "command": "npm run build:scripts",
+    "command": "npm run build:scripts && npm run build:styles",
     "watch_dir": ["src", "scripts"]
   },
   "assets": {
