@@ -13,6 +13,7 @@ type Bindings = {
   TURNSTILE_SITE_KEY?: string
   TURNSTILE_SECRET_KEY?: string
   CREATE_RATE_LIMIT?: RateLimiter
+  READ_RATE_LIMIT?: RateLimiter
   ABUSE_EMAIL?: string
 }
 
@@ -28,7 +29,8 @@ const MAX_PASTE_BYTES = 64 * 1024
 const MAX_FORM_BYTES = MAX_PASTE_BYTES * 3 + 4096
 const TTL_SECONDS = { '1h': 3600, '1d': 86400, '7d': 604800 } as const
 const DEFAULT_TTL = '1d'
-const OPAQUE_ID = /^[A-Za-z0-9_-]{8,128}$/
+// six-character ids are new; 22-character base64url ids are existing rows
+const PASTE_ID = /^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{22})$/
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
 const app = new Hono<{ Bindings: Bindings; Variables: { turnstile: TurnstileKeys } }>()
@@ -180,9 +182,17 @@ function parseTtl(value: string | null): { label: string; seconds: number } {
   return { label: DEFAULT_TTL, seconds: TTL_SECONDS[DEFAULT_TTL] }
 }
 
+async function readNotLimited(c: AppContext): Promise<Response | null> {
+  const limiter = c.env.READ_RATE_LIMIT
+  if (!limiter) return null
+  const { success } = await limiter.limit({ key: c.req.header('cf-connecting-ip') ?? 'unknown' })
+  if (success) return null
+  return notice(c, 429, 'too many requests', 'please wait a moment before opening more pastes.')
+}
+
 async function findPaste(c: AppContext) {
   const id = c.req.param('id') ?? ''
-  if (!OPAQUE_ID.test(id)) return null
+  if (!PASTE_ID.test(id)) return null
   const paste = await getPaste(c.env.DB, id)
   if (!paste) return null
   if (paste.expiresAt <= Math.floor(Date.now() / 1000)) return null
@@ -272,13 +282,15 @@ app.get('/p/:id', (c) => redirectLegacyPaste(c, ''))
 
 function redirectLegacyPaste(c: AppContext, suffix: '' | '/raw') {
   const id = c.req.param('id') ?? ''
-  if (!OPAQUE_ID.test(id)) {
+  if (!PASTE_ID.test(id)) {
     return c.notFound()
   }
   return c.redirect(`/${id}${suffix}`, 308)
 }
 
 app.get('/:id/raw', async (c) => {
+  const limited = await readNotLimited(c)
+  if (limited) return limited
   const paste = await findPaste(c)
   if (!paste) {
     return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
@@ -287,6 +299,8 @@ app.get('/:id/raw', async (c) => {
 })
 
 app.get('/:id', async (c) => {
+  const limited = await readNotLimited(c)
+  if (limited) return limited
   const paste = await findPaste(c)
   if (!paste) {
     return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')

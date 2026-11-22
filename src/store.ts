@@ -1,6 +1,10 @@
 /// <reference lib="dom" />
 
-const ID_BYTES = 16
+const ID_LENGTH = 6
+const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+// 248 is the largest multiple of 62 below 256, so rejection keeps the mapping uniform
+const BASE62_LIMIT = 248
+const RESERVED_IDS = new Set(['pastes'])
 const PURGE_BATCH_SIZE = 50
 const INSERT_ATTEMPTS = 5
 
@@ -27,14 +31,19 @@ interface PasteRow {
   expires_at: number
 }
 
-function toBase64Url(bytes: Uint8Array): string {
-  let binary = ''
-  for (const byte of bytes) binary += String.fromCharCode(byte)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-function randomBase64Url(size: number): string {
-  return toBase64Url(crypto.getRandomValues(new Uint8Array(size)))
+function randomId(): string {
+  for (;;) {
+    let id = ''
+    while (id.length < ID_LENGTH) {
+      const bytes = crypto.getRandomValues(new Uint8Array(ID_LENGTH - id.length))
+      for (const byte of bytes) {
+        if (byte >= BASE62_LIMIT) continue
+        id += BASE62[byte % 62]
+        if (id.length === ID_LENGTH) break
+      }
+    }
+    if (!RESERVED_IDS.has(id)) return id
+  }
 }
 
 function nowSeconds(): number {
@@ -52,7 +61,7 @@ export async function createPaste(
   const createdAt = nowSeconds()
   const expiresAt = createdAt + Math.ceil(ttlSeconds)
   for (let attempt = 0; attempt < INSERT_ATTEMPTS; attempt++) {
-    const id = randomBase64Url(ID_BYTES)
+    const id = randomId()
     const result = await db
       .prepare(
         'INSERT INTO pastes (id, body, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',

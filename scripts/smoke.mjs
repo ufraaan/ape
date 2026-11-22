@@ -25,7 +25,7 @@ async function post(path, fields, headers = {}) {
 
 function createdId(response) {
   const path = response.headers.get('location') ?? ''
-  const match = path.match(/^\/([A-Za-z0-9_-]{22})$/)
+  const match = path.match(/^\/([A-Za-z0-9]{6})$/)
   return match?.[1] ?? null
 }
 
@@ -59,7 +59,8 @@ check(main.response.status === 303, `create: expected 303, got ${main.response.s
 check(main.response.headers.get('cache-control') === 'no-store', 'create redirect is not cached')
 
 const id = createdId(main.response)
-check(Boolean(id), 'create redirects to the short paste url')
+check(Boolean(id), 'create redirects to a six-character paste url')
+check(id !== 'pastes', 'generated ids avoid the create route word')
 const page = await fetch(`${BASE}/${id}`)
 const pageHtml = await page.text()
 check(page.status === 200, `view: expected 200, got ${page.status}`)
@@ -91,6 +92,40 @@ for (const suffix of ['', '/raw']) {
   await legacy.arrayBuffer()
 }
 
+const legacyId = 'AbCdEfGhIjKlMnOpQrSt-_'
+const caseId = 'Zq7Xk2'
+localSql(
+  `INSERT OR REPLACE INTO pastes (id, body, created_at, expires_at) VALUES ('${legacyId}', 'legacy fixture', 0, 4102444800)`,
+)
+localSql(
+  `INSERT OR REPLACE INTO pastes (id, body, created_at, expires_at) VALUES ('${caseId}', 'case fixture', 0, 4102444800)`,
+)
+
+const legacyPage = await fetch(`${BASE}/${legacyId}`)
+const legacyHtml = await legacyPage.text()
+check(legacyPage.status === 200, `legacy id view: expected 200, got ${legacyPage.status}`)
+check(legacyHtml.includes('legacy fixture'), 'legacy id still resolves')
+const legacyRaw = await fetch(`${BASE}/${legacyId}/raw`)
+check((await legacyRaw.text()) === 'legacy fixture', 'legacy id raw still resolves')
+
+for (const suffix of ['', '/raw']) {
+  const legacyRedirect = await fetch(`${BASE}/p/${legacyId}${suffix}`, { redirect: 'manual' })
+  check(legacyRedirect.status === 308, 'legacy id old links redirect')
+  check(
+    legacyRedirect.headers.get('location') === `/${legacyId}${suffix}`,
+    'legacy id redirects to the short url',
+  )
+  await legacyRedirect.arrayBuffer()
+}
+
+const casePage = await fetch(`${BASE}/${caseId}`)
+check(casePage.status === 200, `case fixture view: expected 200, got ${casePage.status}`)
+await casePage.arrayBuffer()
+await expect404(`/${caseId.toLowerCase()}`, 'paste ids are case-sensitive')
+await expect404(`/${caseId.toUpperCase()}`, 'paste ids stay case-sensitive uppercased')
+
+localSql(`DELETE FROM pastes WHERE id IN ('${legacyId}', '${caseId}')`)
+
 const raw = await fetch(`${BASE}/${id}/raw`)
 const rawBytes = new Uint8Array(await raw.arrayBuffer())
 check(raw.status === 200, `raw: expected 200, got ${raw.status}`)
@@ -107,6 +142,15 @@ check(
 await expect404('/doesnotexist1/raw', 'unknown paste raw')
 await expect404('/short', 'malformed paste id')
 await expect404('/short/raw', 'malformed paste id raw')
+await expect404('/abcde', 'five-character paste id')
+await expect404('/abcdefg', 'seven-character paste id')
+await expect404('/abcde!', 'paste id with an invalid character')
+await expect404('/abc_def', 'paste id with a legacy-only character and length')
+await expect404('/AAAAAA/raw', 'valid-looking missing paste raw')
+await expect404('/abcde/raw', 'short missing paste raw')
+const invalidLegacy = await fetch(`${BASE}/p/abcde`, { redirect: 'manual' })
+check(invalidLegacy.status === 404, 'invalid old paste links do not redirect')
+await invalidLegacy.arrayBuffer()
 
 const exact = 'a'.repeat(65530) + '👋é'
 check(new TextEncoder().encode(exact).byteLength === 65536, 'fixture is exactly the 64 KiB limit')
@@ -209,5 +253,16 @@ for (let attempt = 0; attempt < 10; attempt++) {
   limited.push(attemptResult.response.status)
 }
 check(limited.includes(429), `create rate limiter returned 429 within the window, saw ${limited.join(',')}`)
+
+let readStatus = 0
+for (let attempt = 0; attempt < 200 && readStatus !== 429; attempt++) {
+  const response = await fetch(`${BASE}/AAAAAA`)
+  readStatus = response.status
+  await response.arrayBuffer()
+}
+check(readStatus === 429, `read rate limiter returned 429, last status ${readStatus}`)
+const limitedRaw = await fetch(`${BASE}/AAAAAA/raw`)
+check(limitedRaw.status === 429, 'read rate limiter covers raw reads')
+await limitedRaw.arrayBuffer()
 
 console.log(`ok: ${checks} checks passed`)
