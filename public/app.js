@@ -1,5 +1,14 @@
 document.documentElement.dataset.enhanced = ''
 
+const reportLink = document.querySelector('[data-report-abuse]')
+reportLink?.addEventListener('click', () => {
+  const draft = new URL(reportLink.href)
+  const subject = draft.searchParams.get('subject') ?? ''
+  const body = draft.searchParams.get('body') ?? ''
+  const updatedBody = body.replace(/^report timestamp: [^\r\n]*/m, `report timestamp: ${new Date().toISOString()}`)
+  reportLink.href = `mailto:${draft.pathname}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(updatedBody)}`
+})
+
 const MAX_BYTES = 64 * 1024
 const field = document.querySelector('[data-body]')
 const count = document.querySelector('[data-count]')

@@ -96,7 +96,10 @@ function abuseReportHref(c: AppContext, pasteId?: string): string | undefined {
 
   const pasteUrl = pasteId ? new URL(`/${pasteId}`, c.req.url).href : ''
   const subject = encodeURIComponent('ape abuse report')
-  const body = encodeURIComponent(`paste link: ${pasteUrl}\r\n\r\nwhat are you reporting?\r\n`)
+  const timestamp = new Date().toISOString()
+  const body = encodeURIComponent(
+    `paste link: ${pasteUrl}\r\nreport timestamp: ${timestamp}\r\n\r\nwhat are you reporting?\r\n`,
+  )
   return `mailto:${email}?subject=${subject}&body=${body}`
 }
 

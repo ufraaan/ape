@@ -83,6 +83,8 @@ if (ABUSE_EMAIL) {
     draft.searchParams.get('body')?.startsWith(`paste link: ${new URL(`/${id}`, BASE).href}\r\n`),
     'paste report includes the canonical url',
   )
+  const timestamp = draft.searchParams.get('body')?.match(/^report timestamp: ([^\r\n]+)/m)?.[1]
+  check(timestamp && Math.abs(Date.now() - Date.parse(timestamp)) < 60_000, 'paste report includes a fresh timestamp')
 }
 
 for (const suffix of ['', '/raw']) {
@@ -232,7 +234,7 @@ if (ABUSE_EMAIL) {
   check(draft?.pathname === ABUSE_EMAIL, 'home report addresses the configured contact')
   check(draft.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
   check(
-    /<footer[\s\S]*?<a class="quiet-link" href="mailto:[^"]+">report abuse<\/a>[\s\S]*?<\/footer>/.test(homeHtml),
+    /<footer[\s\S]*?<a class="quiet-link" href="mailto:[^"]+" data-report-abuse>report abuse<\/a>[\s\S]*?<\/footer>/.test(homeHtml),
     'home footer reports abuse by mail',
   )
 }

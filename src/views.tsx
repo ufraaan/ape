@@ -87,7 +87,7 @@ function page(options: {
     </header>
     ${options.main}
     ${options.reportHref ? html`<footer class="wrap footer">
-      <a class="quiet-link" href="${options.reportHref}">report abuse</a>
+      <a class="quiet-link" href="${options.reportHref}" data-report-abuse>report abuse</a>
     </footer>` : ''}
   </body>
 </html>`
