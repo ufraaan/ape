@@ -1,13 +1,12 @@
 # ape
 
-A small pastebin on Cloudflare Workers and D1. No accounts, no passwords. Each paste gets an
-opaque link, an expiry (1 hour, 1 day, or 7 days), and a one-time deletion token.
+a small pastebin on cloudflare workers(https://www.cloudflare.com/products/workers/) and D1. No accounts, no passwords. Each paste gets an
+opaque link and an expiry (1 hour, 1 day, or 7 days).
 
 - `GET /` compose form
-- `POST /pastes` create (64 KiB of UTF-8 text, hard limit)
-- `GET /p/:id` rendered paste
-- `GET /p/:id/raw` exact bytes, `text/plain; charset=utf-8`
-- `POST /p/:id/delete` delete with the token
+- `POST /pastes` create (64 KiB of UTF-8 text, hard limit) and redirect to the paste
+- `GET /:id` rendered paste
+- `GET /:id/raw` exact bytes, `text/plain; charset=utf-8`
 - `GET /abuse` abuse reporting instructions
 
 Expired pastes are hidden on read immediately and deleted by an hourly cron. Paste responses are
@@ -47,8 +46,8 @@ SMOKE_ABUSE_EMAIL=abuse@example.com npm run smoke
 
 The script exercises the real Worker and local D1: assets and CSP, create, canonical link,
 independent view/raw reads with exact bytes, UTF-8 limit and 413, expiry and scheduled cleanup,
-malformed/wrong/successful delete, token leakage, XSS escaping, abuse page, and the create rate
-limiter. It writes to local D1 only (it creates pastes, forces one to expire, and deletes one).
+legacy redirects, XSS escaping, abuse page, and the create rate limiter. It writes to local D1
+only (it creates pastes and forces one to expire).
 The rate-limiter probe at the end uses the whole 10-per-minute window, so wait a minute before
 running the smoke test again.
 
@@ -127,8 +126,8 @@ housekeeping rather than a security boundary.
 
 ## Operating pastes
 
-There is no public admin endpoint. Operators take a paste down with the paste ID (the segment
-after `/p/`):
+There is no public admin endpoint. Operators take a paste down with the paste ID (the first path
+segment of the share link):
 
 ```sh
 npx wrangler d1 execute ape --remote --command "DELETE FROM pastes WHERE id = '<paste-id>'"
@@ -140,15 +139,9 @@ To purge every currently expired row early:
 npx wrangler d1 execute ape --remote --command "DELETE FROM pastes WHERE expires_at <= unixepoch()"
 ```
 
-Users delete their own paste with the token shown once after creation. Deletion is permanent;
-there is no recovery.
-
 ## Notes
 
-- The deletion token is stored only as a SHA-256 hash. It appears once in the create response and
-  is never rendered by view, raw, or error responses.
-- The create success page is an HTML response containing the token, so refreshing it re-submits
-  the form and creates another paste.
+- Existing `/p/<id>` links redirect to `/<id>`.
 - Raw responses are served as `text/plain` with `nosniff`, so pasted HTML cannot execute.
 - No analytics, cookies, or external assets are used. Turnstile is the only third-party script,
   and only when enabled.

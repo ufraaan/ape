@@ -1,7 +1,6 @@
 /// <reference lib="dom" />
 
 const ID_BYTES = 16
-const TOKEN_BYTES = 32
 const PURGE_BATCH_SIZE = 50
 const INSERT_ATTEMPTS = 5
 
@@ -22,10 +21,6 @@ export interface Paste {
   expiresAt: number
 }
 
-export interface CreatedPaste extends Paste {
-  deleteToken: string
-}
-
 interface PasteRow {
   id: string
   body: string
@@ -42,11 +37,6 @@ function randomBase64Url(size: number): string {
   return toBase64Url(crypto.getRandomValues(new Uint8Array(size)))
 }
 
-async function sha256Base64Url(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-  return toBase64Url(new Uint8Array(digest))
-}
-
 function nowSeconds(): number {
   return Math.floor(Date.now() / 1000)
 }
@@ -55,25 +45,22 @@ export async function createPaste(
   db: PasteDatabase,
   body: string,
   ttlSeconds: number,
-): Promise<CreatedPaste> {
+): Promise<Paste> {
   if (!Number.isFinite(ttlSeconds) || ttlSeconds <= 0) {
     throw new RangeError('ttlSeconds must be a positive number')
   }
   const createdAt = nowSeconds()
   const expiresAt = createdAt + Math.ceil(ttlSeconds)
-  const deleteToken = randomBase64Url(TOKEN_BYTES)
-  const deleteTokenHash = await sha256Base64Url(deleteToken)
-
   for (let attempt = 0; attempt < INSERT_ATTEMPTS; attempt++) {
     const id = randomBase64Url(ID_BYTES)
     const result = await db
       .prepare(
-        'INSERT INTO pastes (id, body, created_at, expires_at, delete_token_hash) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',
+        'INSERT INTO pastes (id, body, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING',
       )
-      .bind(id, body, createdAt, expiresAt, deleteTokenHash)
+      .bind(id, body, createdAt, expiresAt)
       .run()
     if (result.meta.changes > 0) {
-      return { id, body, expiresAt, deleteToken }
+      return { id, body, expiresAt }
     }
   }
 
@@ -87,19 +74,6 @@ export async function getPaste(db: PasteDatabase, id: string): Promise<Paste | n
     .first<PasteRow>()
   if (!row) return null
   return { id: row.id, body: row.body, expiresAt: row.expires_at }
-}
-
-export async function deletePaste(
-  db: PasteDatabase,
-  id: string,
-  token: string,
-): Promise<boolean> {
-  const deleteTokenHash = await sha256Base64Url(token)
-  const result = await db
-    .prepare('DELETE FROM pastes WHERE id = ? AND delete_token_hash = ? AND expires_at > ?')
-    .bind(id, deleteTokenHash, nowSeconds())
-    .run()
-  return result.meta.changes > 0
 }
 
 export async function purgeExpired(db: PasteDatabase): Promise<void> {

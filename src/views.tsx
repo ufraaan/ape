@@ -13,8 +13,6 @@ export interface PasteOptions {
   id: string
   body: string
   expiresAt: number
-  deleteToken?: string
-  error?: string
 }
 
 export interface NoticeOptions {
@@ -143,8 +141,7 @@ function currentOption(value: string, label: string, current: string): Markup {
 }
 
 export function renderPaste(options: PasteOptions): string | Promise<string> {
-  const path = `/p/${encodeURIComponent(options.id)}`
-  const token = options.deleteToken
+  const path = `/${encodeURIComponent(options.id)}`
 
   return page({
     title: 'paste · ape',
@@ -152,7 +149,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
     main: html`<main id="main" class="wrap main">
       <div class="paste-head">
         <div>
-          <h1><a class="paste-title" href="${path}">${token ? 'paste created' : 'paste'}</a></h1>
+          <h1><a class="paste-title" href="${path}">paste</a></h1>
           <p class="subhead">${expiryTime(options.expiresAt)}</p>
         </div>
         <div class="paste-actions">
@@ -161,31 +158,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
           <a class="button" href="${path}/raw">raw</a>
         </div>
       </div>
-      ${token
-        ? html`<section class="token" aria-labelledby="token-title">
-            <div>
-              <h2 id="token-title">deletion token</h2>
-              <p class="muted">save this token to delete the paste later. it is shown once.</p>
-            </div>
-            <div class="token-row">
-              <code id="delete-token-value">${token}</code>
-              ${copyButton('--copy-token', 'copy token', 'delete-token-value')}
-            </div>
-          </section>`
-        : ''}
-      ${options.error ? html`<p class="error" role="alert">${options.error}</p>` : ''}
       <pre class="paste-body" id="paste-body" tabindex="0" aria-label="paste text"><code>${options.body}</code></pre>
-      <details class="delete">
-        <summary>delete paste</summary>
-        <form method="post" action="${path}/delete">
-          <label for="delete-token">deletion token</label>
-          <input id="delete-token" name="token" type="text" required
-            autocomplete="off" autocapitalize="none" spellcheck="false"
-            aria-describedby="delete-help" ${token ? html`value="${token}"` : ''} />
-          <p class="muted" id="delete-help">this permanently removes the paste for everyone.</p>
-          <button class="button danger" type="submit">delete permanently</button>
-        </form>
-      </details>
     </main>`,
   })
 }

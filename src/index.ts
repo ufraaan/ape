@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
-import { createPaste, deletePaste, getPaste, purgeExpired, type PasteDatabase } from './store'
+import { createPaste, getPaste, purgeExpired, type PasteDatabase } from './store'
 import { renderCompose, renderNotice, renderPaste } from './views'
 
 type RateLimiter = {
@@ -245,7 +245,7 @@ app.post('/pastes', async (c) => {
     return compose(c, 400, undefined, ttl.label, 'write something before creating a paste.')
   }
 
-  const { secretKey, siteKey } = c.get('turnstile')
+  const { secretKey } = c.get('turnstile')
   if (secretKey) {
     const token = form.get('cf-turnstile-response') ?? ''
     if (!token || !(await verifyTurnstile(secretKey, token, ip))) {
@@ -254,56 +254,27 @@ app.post('/pastes', async (c) => {
   }
 
   const paste = await createPaste(c.env.DB, body, ttl.seconds)
-  return page(
-    c,
-    201,
-    renderPaste({
-      id: paste.id,
-      body: paste.body,
-      expiresAt: paste.expiresAt,
-      deleteToken: paste.deleteToken,
-    }),
-    Boolean(siteKey),
-  )
+  c.header('Cache-Control', 'no-store')
+  return c.redirect(`/${paste.id}`, 303)
 })
 
-app.get('/p/:id/raw', async (c) => {
+app.get('/p/:id/raw', (c) => redirectLegacyPaste(c, '/raw'))
+app.get('/p/:id', (c) => redirectLegacyPaste(c, ''))
+
+function redirectLegacyPaste(c: AppContext, suffix: '' | '/raw') {
+  const id = c.req.param('id') ?? ''
+  if (!OPAQUE_ID.test(id)) {
+    return c.notFound()
+  }
+  return c.redirect(`/${id}${suffix}`, 308)
+}
+
+app.get('/:id/raw', async (c) => {
   const paste = await findPaste(c)
   if (!paste) {
     return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
   }
   return c.text(paste.body, 200, rawHeaders())
-})
-
-app.get('/p/:id', async (c) => {
-  const paste = await findPaste(c)
-  if (!paste) {
-    return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
-  }
-  return page(
-    c,
-    200,
-    renderPaste({ id: paste.id, body: paste.body, expiresAt: paste.expiresAt }),
-  )
-})
-
-app.post('/p/:id/delete', async (c) => {
-  if (!isSameOrigin(c.req.raw)) {
-    return notice(c, 403, 'request blocked', 'cross-site form submissions are not allowed.')
-  }
-  const form = await readForm(c)
-  if (form instanceof Response) return form
-
-  const id = c.req.param('id') ?? ''
-  const token = form.get('token') ?? ''
-  if (!OPAQUE_ID.test(id) || !OPAQUE_ID.test(token)) {
-    return notice(c, 404, 'paste not found', 'this paste does not exist or was already deleted.')
-  }
-  const deleted = await deletePaste(c.env.DB, id, token)
-  if (!deleted) {
-    return notice(c, 404, 'paste not found', 'this paste does not exist or was already deleted.')
-  }
-  return notice(c, 200, 'paste deleted', 'the paste and its contents have been removed.')
 })
 
 app.get('/abuse', (c) => {
@@ -319,6 +290,14 @@ app.get('/abuse', (c) => {
       abuseEmail,
     }),
   )
+})
+
+app.get('/:id', async (c) => {
+  const paste = await findPaste(c)
+  if (!paste) {
+    return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
+  }
+  return page(c, 200, renderPaste(paste))
 })
 
 app.notFound((c) => notice(c, 404, 'not found', 'the page you requested does not exist.'))

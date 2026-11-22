@@ -183,8 +183,7 @@ textarea::placeholder {
 .form-actions,
 .expiry,
 .paste-head,
-.paste-actions,
-.token-row {
+.paste-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -192,8 +191,7 @@ textarea::placeholder {
 }
 
 .form-actions,
-.paste-head,
-.token-row {
+.paste-head {
   justify-content: space-between;
 }
 
@@ -202,15 +200,13 @@ textarea::placeholder {
   margin-block-start: 0.75rem;
 }
 
-.expiry label,
-.muted {
+.expiry label {
   color: var(--muted);
   font-size: 0.8125rem;
 }
 
 .button,
-select,
-.delete input {
+select {
   min-block-size: 2.75rem;
   padding: 0.45rem 0.75rem;
   border: 1px solid var(--border);
@@ -237,10 +233,6 @@ select,
 .form-actions .button {
   min-block-size: 2rem;
   padding: 0 0.6rem;
-}
-
-.button.danger {
-  color: var(--danger);
 }
 
 .button[data-busy] {
@@ -283,20 +275,6 @@ select,
   text-decoration: none;
 }
 
-.token {
-  display: grid;
-  gap: 0.5rem;
-  margin-block-start: 1.25rem;
-  padding-block: 0.85rem;
-  border-block: 1px solid var(--line);
-}
-
-.token code {
-  font-family: var(--mono);
-  overflow-wrap: anywhere;
-  user-select: all;
-}
-
 .paste-body {
   min-block-size: 5rem;
   margin-block-start: 1.25rem;
@@ -312,35 +290,6 @@ select,
 
 .paste-body code {
   font: inherit;
-}
-
-.delete {
-  margin-block-start: 0.55rem;
-}
-
-.delete summary {
-  inline-size: fit-content;
-  padding: 0.7rem 0;
-  color: var(--muted);
-  font-size: 0.8125rem;
-  cursor: pointer;
-}
-
-.delete form {
-  display: grid;
-  justify-items: start;
-  gap: 0.5rem;
-  max-inline-size: 28rem;
-  margin-block-start: 0.35rem;
-}
-
-.delete label {
-  font-size: 0.875rem;
-}
-
-.delete input {
-  inline-size: 100%;
-  font: 1rem var(--mono);
 }
 
 .copy {
@@ -364,10 +313,6 @@ select,
   border-radius: 0.35rem;
   background: var(--surface);
   font-size: 0.75rem;
-}
-
-.token-row .tip {
-  inset-inline: auto 0;
 }
 
 .notice {
