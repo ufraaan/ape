@@ -294,7 +294,7 @@ app.get('/abuse', (c) => {
     renderNotice({
       title: 'report abuse',
       message: abuseEmail
-        ? 'email the address below with the paste link and a short description.'
+        ? 'send the paste link and a short description by email.'
         : 'abuse reporting is unavailable because a contact email has not been configured.',
       abuseEmail,
       reportHref: abuseReportHref(c),

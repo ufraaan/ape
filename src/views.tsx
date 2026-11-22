@@ -65,6 +65,7 @@ function page(options: {
   canonicalPath?: string
   reportHref?: string
   hideReportLink?: boolean
+  showNewPaste?: boolean
 }): Markup {
   return html`<!doctype html>
 <html lang="en">
@@ -85,7 +86,7 @@ function page(options: {
     <a class="skip" href="#main">skip to content</a>
     <header class="wrap masthead">
       <a class="brand" href="/"><img src="/ape-logo.webp" width="28" height="28" alt="" />ape</a>
-      ${options.canonicalPath ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
+      ${options.canonicalPath || options.showNewPaste ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
     </header>
     ${options.main}
     ${options.hideReportLink ? '' : html`<footer class="wrap footer">
@@ -177,11 +178,13 @@ export function renderNotice(options: NoticeOptions): string | Promise<string> {
     title: `${options.title} · ape`,
     reportHref: options.reportHref,
     hideReportLink: Boolean(options.abuseEmail),
+    showNewPaste: true,
     main: html`<main id="main" class="wrap main notice">
       <h1>${options.title}</h1>
       <p class="subhead">${options.message}</p>
-      ${options.abuseEmail ? html`<p><a href="${options.reportHref}">${options.abuseEmail}</a></p>` : ''}
-      <a class="button" href="/">new paste</a>
+      ${options.abuseEmail && options.reportHref
+        ? html`<a class="button" href="${options.reportHref}">report</a>`
+        : ''}
     </main>`,
   })
 }

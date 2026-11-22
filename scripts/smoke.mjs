@@ -160,7 +160,19 @@ check(abuse.status === 200, `abuse page: expected 200, got ${abuse.status}`)
 check(abuseHtml.includes('report abuse'), 'abuse page explains how to report')
 if (ABUSE_EMAIL) {
   check(reportDraft(abuseHtml)?.pathname === ABUSE_EMAIL, 'abuse page shows the configured contact')
+  check(!abuseHtml.includes(`>${ABUSE_EMAIL}<`), 'abuse page does not print the contact email')
+  check(
+    /<a class="button" href="mailto:[^"]+">report<\/a>/.test(abuseHtml),
+    'abuse page offers a report button',
+  )
 }
+
+const missingHtml = await (await fetch(`${BASE}/doesnotexist1`)).text()
+check((missingHtml.match(/>new paste<\/a>/g) ?? []).length === 1, 'notice page exposes one new paste link')
+check(
+  missingHtml.indexOf('>new paste</a>') < missingHtml.indexOf('<main'),
+  'notice new paste link is in the header',
+)
 
 for (const [path, type] of [
   ['/app.css', 'text/css'],
@@ -188,6 +200,9 @@ if (ABUSE_EMAIL) {
   check(draft.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
 }
 check(home.status === 200, `home: expected 200, got ${home.status}`)
+check(homeHtml.includes('<h1>new paste</h1>'), 'home keeps the compose heading')
+check(homeHtml.includes('action="/pastes"'), 'home keeps the create form')
+check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does not duplicate the new paste link')
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
 check(homeCsp.includes("style-src 'self'"), 'CSP allows the self-hosted stylesheet')
