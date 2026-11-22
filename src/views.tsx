@@ -205,6 +205,9 @@ export function renderNotice(options: NoticeOptions): string | Promise<string> {
     title: `${options.title} · ape`,
     showNewPaste: true,
     main: html`<main id="main" class="mx-auto grid w-[min(48rem,100%_-_2.5rem)] justify-items-start gap-3 pt-[clamp(2rem,5vw,4rem)] pb-8">
+      ${options.title === 'paste not found' || options.title === 'not found'
+        ? html`<img src="/paste-not-found.png" alt="" width="642" height="465" class="mb-3 aspect-[642/465] h-auto w-80 max-w-full" />`
+        : ''}
       <h1 class="text-title">${options.title}</h1>
       <p class="subhead mt-[0.4rem] max-w-[58ch] whitespace-pre-line text-muted">${options.message}</p>
     </main>`,
