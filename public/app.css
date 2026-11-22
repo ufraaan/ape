@@ -87,6 +87,16 @@ a {
   text-decoration: none;
 }
 
+.brand img {
+  filter: grayscale(1);
+}
+
+@media (hover: hover) {
+  .brand:hover img {
+    filter: none;
+  }
+}
+
 .quiet-link {
   display: inline-flex;
   align-items: center;
