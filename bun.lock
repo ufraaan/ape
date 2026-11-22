@@ -19,6 +19,11 @@
       },
     },
   },
+  "trustedDependencies": [
+    "workerd",
+    "esbuild",
+    "@parcel/watcher",
+  ],
   "packages": {
     "@cloudflare/kv-asset-handler": ["@cloudflare/kv-asset-handler@0.5.1", "", {}, "sha512-48OysfSW3MkQY1XjkhkpPkgrEkOvgfoyHzA2eyX5wpzFpijC02uWigv3hkNdJdT3C7ybW/U17yYHXeR68pLeww=="],
 

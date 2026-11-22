@@ -1,7 +1,13 @@
 {
   "name": "ape",
   "private": true,
+  "packageManager": "bun@1.4.5",
   "type": "module",
+  "trustedDependencies": [
+    "@parcel/watcher",
+    "esbuild",
+    "workerd"
+  ],
   "scripts": {
     "dev": "wrangler dev",
     "build": "wrangler deploy --dry-run --outdir dist",
