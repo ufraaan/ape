@@ -38,6 +38,11 @@ function reportDraft(html: string): URL | null {
   return href ? new URL(href.replaceAll('&amp;', '&')) : null
 }
 
+function linksMade(html: string): number | null {
+  const match = html.match(/([\d,]+) links made so far\./)
+  return match ? Number(match[1].replaceAll(',', '')) : null
+}
+
 function agePaste(id: string) {
   if (!DO_SQLITE) return false
   const db = new DatabaseSync(DO_SQLITE)
@@ -225,12 +230,26 @@ check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does no
 check(!homeHtml.includes('/vendor/prism.js'), 'compose does not load the highlighter')
 check(homeHtml.includes('property="og:image" content="https://ape.ufraan.dev/og.jpg"'), 'compose links the og image')
 check(homeHtml.includes('name="twitter:card" content="summary_large_image"'), 'compose sets the twitter card')
+const homeCount = linksMade(homeHtml)
+check(homeCount !== null, 'home footer shows the link count')
+check(
+  /<footer[\s\S]*?<p class="me-auto tabular-nums">[\d,]+ links made so far\.<\/p>[\s\S]*?<\/footer>/.test(homeHtml),
+  'home footer formats the link count',
+)
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
 check(homeCsp.includes("style-src 'self'"), 'CSP allows the self-hosted stylesheet')
 check(homeCsp.includes("font-src 'self'"), 'CSP allows the self-hosted font')
 check(homeCsp.includes("img-src 'self' data:"), 'CSP allows self-hosted and data images')
 check(!homeCsp.includes('unsafe-inline'), 'CSP does not allow inline code')
+
+const counted = await create('count me')
+check(counted.response.status === 303, 'created paste for the link count test')
+const recountedHtml = await (await fetch(BASE + '/')).text()
+check(
+  homeCount !== null && linksMade(recountedHtml) === homeCount + 1,
+  'link count advances with each paste',
+)
 
 const limited: number[] = []
 for (let attempt = 0; attempt < 10; attempt++) {

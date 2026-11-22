@@ -122,12 +122,20 @@ function compose(
   body: string | undefined,
   ttl: string | undefined,
   error?: string,
+  linkCount?: number,
 ): Promise<Response> {
   const { siteKey } = c.get('turnstile')
   return page(
     c,
     status,
-    renderCompose({ body, ttl, error, turnstileSiteKey: siteKey, reportHref: abuseReportHref(c) }),
+    renderCompose({
+      body,
+      ttl,
+      error,
+      turnstileSiteKey: siteKey,
+      reportHref: abuseReportHref(c),
+      linkCount,
+    }),
     Boolean(siteKey),
   )
 }
@@ -234,8 +242,9 @@ app.use('*', async (c, next) => {
   await next()
 })
 
-app.get('/', (c) => {
-  return compose(c, 200, undefined, undefined)
+app.get('/', async (c) => {
+  const linkCount = await pasteStore(c.env).createdCount().catch(() => undefined)
+  return compose(c, 200, undefined, undefined, undefined, linkCount)
 })
 
 app.post('/pastes', async (c) => {
