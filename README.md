@@ -1,6 +1,6 @@
 # ape
 
-a small pastebin for sharing plain text, built on [cloudflare workers](https://www.cloudflare.com/products/workers/) and [d1](https://www.cloudflare.com/products/d1/).
+a small pastebin for sharing plain text, built on [cloudflare workers](https://www.cloudflare.com/products/workers/) and a sqlite-backed [durable object](https://developers.cloudflare.com/durable-objects/).
 
 - share up to 64 kib of text without an account.
 - copy an unlisted link at `/<id>` or open the raw text at `/<id>/raw`.

@@ -39,15 +39,18 @@
       "custom_domain": true
     }
   ],
-  "triggers": {
-    "crons": ["17 * * * *"]
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PASTES",
+        "class_name": "PasteStore"
+      }
+    ]
   },
-  "d1_databases": [
+  "migrations": [
     {
-      "binding": "DB",
-      "database_name": "ape",
-      "database_id": "000d5e97-1297-4e0a-9522-df00ec27c165",
-      "migrations_dir": "migrations"
+      "tag": "v1",
+      "new_sqlite_classes": ["PasteStore"]
     }
   ]
 }
