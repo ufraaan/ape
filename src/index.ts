@@ -307,14 +307,16 @@ app.post('/p/:id/delete', async (c) => {
 })
 
 app.get('/abuse', (c) => {
+  const abuseEmail = c.env.ABUSE_EMAIL?.trim()
   return page(
     c,
     200,
     renderNotice({
       title: 'report abuse',
-      message:
-        'pastes are submitted by users and are not reviewed before publication. to report illegal or abusive content, include the paste link and a short description.',
-      abuseEmail: c.env.ABUSE_EMAIL,
+      message: abuseEmail
+        ? 'email the address below with the paste link and a short description.'
+        : 'abuse reporting is unavailable because a contact email has not been configured.',
+      abuseEmail,
     }),
   )
 })
