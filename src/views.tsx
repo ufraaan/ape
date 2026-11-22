@@ -30,6 +30,8 @@ const TTL_OPTIONS = [
 
 const MAX_BYTES = 64 * 1024
 const encoder = new TextEncoder()
+const ORIGIN = 'https://ape.ufraan.dev'
+const DESCRIPTION = 'paste it. share it. gone. anonymous pastes with expiring links — no account, no tracking.'
 
 function sizeLabel(bytes: number): string {
   if (bytes === 0) return '64 kib max'
@@ -72,7 +74,23 @@ function page(options: {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#fafafa" />
     <title>${options.title}</title>
+    <meta name="description" content="${DESCRIPTION}" />
     ${options.canonicalPath ? html`<link rel="canonical" href="${options.canonicalPath}" />` : ''}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ape" />
+    <meta property="og:title" content="${options.title}" />
+    <meta property="og:description" content="${DESCRIPTION}" />
+    <meta property="og:url" content="${ORIGIN}${options.canonicalPath ?? '/'}" />
+    <meta property="og:image" content="${ORIGIN}/og.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ape — paste it. share it. gone." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${options.title}" />
+    <meta name="twitter:description" content="${DESCRIPTION}" />
+    <meta name="twitter:image" content="${ORIGIN}/og.jpg" />
+    <meta name="twitter:image:alt" content="ape — paste it. share it. gone." />
     <link rel="icon" href="/ape-logo.webp" type="image/webp" />
     <link rel="stylesheet" href="/app.css" />
     ${options.highlight ? html`<script src="/vendor/prism.js" defer></script>` : ''}
