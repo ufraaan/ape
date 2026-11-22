@@ -4,7 +4,8 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-22",
   "build": {
-    "command": "node scripts/build-highlight.mjs"
+    "command": "npm run build:scripts",
+    "watch_dir": ["src", "scripts"]
   },
   "assets": {
     "directory": "./public",

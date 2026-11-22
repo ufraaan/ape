@@ -5,14 +5,16 @@
   "scripts": {
     "dev": "wrangler dev --test-scheduled",
     "build": "wrangler deploy --dry-run --outdir dist",
-    "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/highlight-auto.test.js",
-    "smoke": "node scripts/smoke.mjs"
+    "build:scripts": "node scripts/build-scripts.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.client.json",
+    "test": "node --test scripts/highlight-auto.test.ts",
+    "smoke": "node scripts/smoke.ts"
   },
   "dependencies": {
     "hono": "^4.13.20"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "esbuild": "^0.28.2",
     "highlight.js": "^11.12.0",
     "typescript": "^7.0.2",

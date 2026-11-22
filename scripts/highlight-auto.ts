@@ -11,14 +11,14 @@ import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
 
 const languages = { bash, css, go, javascript, json, python, rust, sql, typescript, xml }
-for (const name of Object.keys(languages)) hljs.registerLanguage(name, languages[name])
+for (const [name, language] of Object.entries(languages)) hljs.registerLanguage(name, language)
 
 const SAMPLE_LIMIT = 4000
 const MIN_RELEVANCE = 7
 const SIMILAR = new Set(['javascript', 'typescript'])
 const CODE_PUNCTUATION = /[{}[\]();=<>$#]/g
 
-export function detectLanguage(code) {
+export function detectLanguage(code: string): string | null {
   const sample = code.slice(0, SAMPLE_LIMIT)
   const trimmed = sample.trim()
   if (trimmed.length < 40) return null
@@ -37,12 +37,12 @@ export function detectLanguage(code) {
   if (!result.language || result.relevance < MIN_RELEVANCE) return null
   const runnerUp = result.secondBest
   if (runnerUp && result.relevance - runnerUp.relevance < 1) {
-    if (!SIMILAR.has(result.language) || !SIMILAR.has(runnerUp.language)) return null
+    if (!runnerUp.language || !SIMILAR.has(result.language) || !SIMILAR.has(runnerUp.language)) return null
   }
   return result.language
 }
 
-export function highlight(code) {
+export function highlight(code: string): { language: string; value: string } | null {
   const language = detectLanguage(code)
   if (!language) return null
   return { language, value: hljs.highlight(code, { language, ignoreIllegals: true }).value }

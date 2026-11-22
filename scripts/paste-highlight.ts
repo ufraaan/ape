@@ -1,6 +1,6 @@
-import { highlight } from './highlight-auto.js'
+import { highlight } from './highlight-auto.ts'
 
-const block = document.querySelector('[data-highlight]')
+const block = document.querySelector<HTMLElement>('[data-highlight]')
 if (block) {
   const rendered = highlight(block.textContent ?? '')
   if (rendered) {

@@ -6,16 +6,20 @@ const ABUSE_EMAIL = process.env.SMOKE_ABUSE_EMAIL ?? ''
 const PERSIST_TO = process.env.SMOKE_PERSIST_TO
 
 let checks = 0
-function check(condition, message) {
+function check(condition: unknown, message: string) {
   checks++
   if (!condition) throw new Error(`FAIL: ${message}`)
 }
 
-function form(fields) {
+function form(fields: Record<string, string>): string {
   return new URLSearchParams(fields).toString()
 }
 
-async function post(path, fields, headers = {}) {
+async function post(
+  path: string,
+  fields: Record<string, string>,
+  headers: Record<string, string> = {},
+): Promise<Response> {
   return fetch(BASE + path, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
@@ -24,18 +28,18 @@ async function post(path, fields, headers = {}) {
   })
 }
 
-function createdId(response) {
+function createdId(response: Response): string | null {
   const path = response.headers.get('location') ?? ''
   const match = path.match(/^\/([A-Za-z0-9]{6})$/)
   return match?.[1] ?? null
 }
 
-function reportDraft(html) {
+function reportDraft(html: string): URL | null {
   const href = html.match(/href="(mailto:[^"]+)"/)?.[1]
   return href ? new URL(href.replaceAll('&amp;', '&')) : null
 }
 
-function localSql(command) {
+function localSql(command: string): string {
   return execFileSync(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
     ['--no-install', 'wrangler', 'd1', 'execute', 'ape', '--local', '--json',
@@ -44,12 +48,12 @@ function localSql(command) {
   )
 }
 
-async function create(body, ttl = '1h') {
+async function create(body: string, ttl = '1h'): Promise<{ response: Response; html: string }> {
   const response = await post('/pastes', { body, ttl })
   return { response, html: await response.text() }
 }
 
-async function expect404(path, label) {
+async function expect404(path: string, label: string) {
   const response = await fetch(BASE + path)
   check(response.status === 404, `${label}: expected 404, got ${response.status}`)
   await response.arrayBuffer()
@@ -79,12 +83,12 @@ check(pageHtml.includes('src="/vendor/highlight.js"'), 'view loads the local hig
 if (ABUSE_EMAIL) {
   const draft = reportDraft(pageHtml)
   check(draft?.pathname === ABUSE_EMAIL, 'paste report addresses the configured contact')
-  check(draft.searchParams.get('subject') === 'ape abuse report', 'paste report has a subject')
+  check(draft?.searchParams.get('subject') === 'ape abuse report', 'paste report has a subject')
   check(
-    draft.searchParams.get('body')?.startsWith(`paste link: ${new URL(`/${id}`, BASE).href}\r\n`),
+    draft?.searchParams.get('body')?.startsWith(`paste link: ${new URL(`/${id}`, BASE).href}\r\n`),
     'paste report includes the canonical url',
   )
-  const timestamp = draft.searchParams.get('body')?.match(/^report timestamp: ([^\r\n]+)/m)?.[1]
+  const timestamp = draft?.searchParams.get('body')?.match(/^report timestamp: ([^\r\n]+)/m)?.[1]
   check(timestamp && Math.abs(Date.now() - Date.parse(timestamp)) < 60_000, 'paste report includes a fresh timestamp')
 }
 
@@ -191,7 +195,9 @@ await expect404(`/${expiringId}/raw`, 'expired paste raw')
 const scheduled = await fetch(`${BASE}/__scheduled?cron=17+*+*+*+*`)
 await scheduled.arrayBuffer()
 check(scheduled.status === 200, `scheduled trigger: expected 200, got ${scheduled.status}`)
-const remaining = JSON.parse(localSql(`SELECT count(*) AS n FROM pastes WHERE id = '${expiringId}'`))
+const remaining = JSON.parse(localSql(`SELECT count(*) AS n FROM pastes WHERE id = '${expiringId}'`)) as Array<{
+  results: Array<{ n: number }>
+}>
 check(remaining[0].results[0].n === 0, 'scheduled cleanup removed the expired row')
 
 for (const path of [`/${id}/delete`, `/p/${id}/delete`]) {
@@ -234,7 +240,7 @@ const homeHtml = await home.text()
 if (ABUSE_EMAIL) {
   const draft = reportDraft(homeHtml)
   check(draft?.pathname === ABUSE_EMAIL, 'home report addresses the configured contact')
-  check(draft.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
+  check(draft?.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
   check(
     /<footer[\s\S]*?<a class="quiet-link" href="mailto:[^"]+" data-report-abuse>report abuse<\/a>[\s\S]*?<\/footer>/.test(homeHtml),
     'home footer reports abuse by mail',
@@ -253,7 +259,7 @@ check(homeCsp.includes("font-src 'self'"), 'CSP allows the self-hosted font')
 check(homeCsp.includes("img-src 'self' data:"), 'CSP allows self-hosted and data images')
 check(!homeCsp.includes('unsafe-inline'), 'CSP does not allow inline code')
 
-const limited = []
+const limited: number[] = []
 for (let attempt = 0; attempt < 10; attempt++) {
   const attemptResult = await create(`rate limit ${attempt}`)
   limited.push(attemptResult.response.status)
