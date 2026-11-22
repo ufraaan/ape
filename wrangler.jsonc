@@ -9,7 +9,7 @@
   },
   "vars": {
     "TURNSTILE_SITE_KEY": "",
-    "ABUSE_EMAIL": ""
+    "ABUSE_EMAIL": "naarfu@gmail.com"
   },
   "ratelimits": [
     {

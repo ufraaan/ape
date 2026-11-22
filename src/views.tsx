@@ -7,18 +7,21 @@ export interface ComposeOptions {
   ttl?: string
   error?: string
   turnstileSiteKey?: string
+  reportHref?: string
 }
 
 export interface PasteOptions {
   id: string
   body: string
   expiresAt: number
+  reportHref?: string
 }
 
 export interface NoticeOptions {
   title: string
   message: string
   abuseEmail?: string
+  reportHref?: string
 }
 
 const TTL_OPTIONS = [
@@ -60,6 +63,8 @@ function page(options: {
   main: Markup
   turnstileSiteKey?: string
   canonicalPath?: string
+  reportHref?: string
+  hideReportLink?: boolean
 }): Markup {
   return html`<!doctype html>
 <html lang="en">
@@ -83,7 +88,9 @@ function page(options: {
       ${options.canonicalPath ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
     </header>
     ${options.main}
-    <footer class="wrap footer"><a class="quiet-link" href="/abuse">report abuse</a></footer>
+    ${options.hideReportLink ? '' : html`<footer class="wrap footer">
+      <a class="quiet-link" href="${options.reportHref ?? '/abuse'}">report abuse</a>
+    </footer>`}
   </body>
 </html>`
 }
@@ -96,6 +103,7 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
   return page({
     title: 'new paste · ape',
     turnstileSiteKey: options.turnstileSiteKey,
+    reportHref: options.reportHref,
     main: html`<main id="main" class="wrap main">
       <h1>new paste</h1>
       <p class="subhead" id="visibility">anyone with the link can read it.</p>
@@ -146,6 +154,7 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
   return page({
     title: 'paste · ape',
     canonicalPath: path,
+    reportHref: options.reportHref,
     main: html`<main id="main" class="wrap main">
       <div class="paste-head">
         <div>
@@ -166,10 +175,12 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
 export function renderNotice(options: NoticeOptions): string | Promise<string> {
   return page({
     title: `${options.title} · ape`,
+    reportHref: options.reportHref,
+    hideReportLink: Boolean(options.abuseEmail),
     main: html`<main id="main" class="wrap main notice">
       <h1>${options.title}</h1>
       <p class="subhead">${options.message}</p>
-      ${options.abuseEmail ? html`<p><a href="mailto:${options.abuseEmail}">${options.abuseEmail}</a></p>` : ''}
+      ${options.abuseEmail ? html`<p><a href="${options.reportHref}">${options.abuseEmail}</a></p>` : ''}
       <a class="button" href="/">new paste</a>
     </main>`,
   })

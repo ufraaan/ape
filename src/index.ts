@@ -88,13 +88,23 @@ async function page(
   return c.html(await markup, status, pageHeaders(turnstile))
 }
 
+function abuseReportHref(c: AppContext, pasteId?: string): string | undefined {
+  const email = c.env.ABUSE_EMAIL?.trim()
+  if (!email) return undefined
+
+  const pasteUrl = pasteId ? new URL(`/${pasteId}`, c.req.url).href : ''
+  const subject = encodeURIComponent('ape abuse report')
+  const body = encodeURIComponent(`paste link: ${pasteUrl}\r\n\r\nwhat are you reporting?\r\n`)
+  return `mailto:${email}?subject=${subject}&body=${body}`
+}
+
 function notice(
   c: AppContext,
   status: ContentfulStatusCode,
   title: string,
   message: string,
 ): Promise<Response> {
-  return page(c, status, renderNotice({ title, message }))
+  return page(c, status, renderNotice({ title, message, reportHref: abuseReportHref(c) }))
 }
 
 function compose(
@@ -108,7 +118,7 @@ function compose(
   return page(
     c,
     status,
-    renderCompose({ body, ttl, error, turnstileSiteKey: siteKey }),
+    renderCompose({ body, ttl, error, turnstileSiteKey: siteKey, reportHref: abuseReportHref(c) }),
     Boolean(siteKey),
   )
 }
@@ -211,8 +221,7 @@ app.use('*', async (c, next) => {
 })
 
 app.get('/', (c) => {
-  const { siteKey } = c.get('turnstile')
-  return page(c, 200, renderCompose({ turnstileSiteKey: siteKey }), Boolean(siteKey))
+  return compose(c, 200, undefined, undefined)
 })
 
 app.post('/pastes', async (c) => {
@@ -288,6 +297,7 @@ app.get('/abuse', (c) => {
         ? 'email the address below with the paste link and a short description.'
         : 'abuse reporting is unavailable because a contact email has not been configured.',
       abuseEmail,
+      reportHref: abuseReportHref(c),
     }),
   )
 })
@@ -297,7 +307,7 @@ app.get('/:id', async (c) => {
   if (!paste) {
     return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
   }
-  return page(c, 200, renderPaste(paste))
+  return page(c, 200, renderPaste({ ...paste, reportHref: abuseReportHref(c, paste.id) }))
 })
 
 app.notFound((c) => notice(c, 404, 'not found', 'the page you requested does not exist.'))

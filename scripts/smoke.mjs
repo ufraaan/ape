@@ -29,6 +29,11 @@ function createdId(response) {
   return match?.[1] ?? null
 }
 
+function reportDraft(html) {
+  const href = html.match(/href="(mailto:[^"]+)"/)?.[1]
+  return href ? new URL(href.replaceAll('&amp;', '&')) : null
+}
+
 function localSql(command) {
   return execFileSync(
     process.platform === 'win32' ? 'npx.cmd' : 'npx',
@@ -69,6 +74,15 @@ check(
   pageHtml.includes(`<link rel="canonical" href="/${id}" />`),
   'view declares the short url as canonical',
 )
+if (ABUSE_EMAIL) {
+  const draft = reportDraft(pageHtml)
+  check(draft?.pathname === ABUSE_EMAIL, 'paste report addresses the configured contact')
+  check(draft.searchParams.get('subject') === 'ape abuse report', 'paste report has a subject')
+  check(
+    draft.searchParams.get('body')?.startsWith(`paste link: ${new URL(`/${id}`, BASE).href}\r\n`),
+    'paste report includes the canonical url',
+  )
+}
 
 for (const suffix of ['', '/raw']) {
   const legacy = await fetch(`${BASE}/p/${id}${suffix}`, { redirect: 'manual' })
@@ -145,7 +159,7 @@ const abuseHtml = await abuse.text()
 check(abuse.status === 200, `abuse page: expected 200, got ${abuse.status}`)
 check(abuseHtml.includes('report abuse'), 'abuse page explains how to report')
 if (ABUSE_EMAIL) {
-  check(abuseHtml.includes(`mailto:${ABUSE_EMAIL}`), 'abuse page shows the configured contact')
+  check(reportDraft(abuseHtml)?.pathname === ABUSE_EMAIL, 'abuse page shows the configured contact')
 }
 
 for (const [path, type] of [
@@ -167,7 +181,12 @@ check(appJs.includes('link[rel="canonical"]'), 'copy link reads the canonical ur
 
 const home = await fetch(BASE + '/')
 const homeCsp = home.headers.get('content-security-policy') ?? ''
-await home.text()
+const homeHtml = await home.text()
+if (ABUSE_EMAIL) {
+  const draft = reportDraft(homeHtml)
+  check(draft?.pathname === ABUSE_EMAIL, 'home report addresses the configured contact')
+  check(draft.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
+}
 check(home.status === 200, `home: expected 200, got ${home.status}`)
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
