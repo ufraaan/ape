@@ -13,7 +13,7 @@
   },
   "vars": {
     "TURNSTILE_SITE_KEY": "",
-    "ABUSE_EMAIL": "naarfu@gmail.com"
+    "ABUSE_EMAIL": "ape@ufraan.dev"
   },
   "ratelimits": [
     {
