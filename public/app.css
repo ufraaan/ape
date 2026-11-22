@@ -188,6 +188,7 @@ textarea::placeholder {
 
 .editor-capacity {
   position: relative;
+  cursor: help;
 }
 
 .editor-tooltip {
