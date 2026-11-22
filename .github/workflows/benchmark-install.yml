@@ -1,0 +1,47 @@
+name: Compare package managers
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/benchmark-install.yml
+      - scripts/benchmark-install.mjs
+      - package.json
+      - package-lock.json
+      - scripts/fixtures/package-managers/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: ${{ matrix.manager }} / run ${{ matrix.sample }}
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        manager: [npm, bun, yarn, pnpm]
+        sample: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 26
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        if: matrix.manager == 'bun'
+        with:
+          bun-version: 1.4.5
+          no-cache: true
+      - name: Set up Yarn
+        if: matrix.manager == 'yarn'
+        run: npm install --global @yarnpkg/cli-dist@4.19.0
+      - name: Set up pnpm
+        if: matrix.manager == 'pnpm'
+        run: npm install --global pnpm@12.21.0
+      - name: Measure cold and warm installs
+        run: node scripts/benchmark-install.mjs
+        env:
+          BENCHMARK_MANAGER: ${{ matrix.manager }}
+      - name: Verify installed dependencies
+        run: npm run typecheck && npm test && npm run build
