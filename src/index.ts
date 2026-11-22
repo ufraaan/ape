@@ -62,7 +62,7 @@ function pageHeaders(turnstile: boolean): Record<string, string> {
       frame,
       connect,
     ].join('; '),
-    'Referrer-Policy': 'no-referrer',
+    'Referrer-Policy': 'same-origin',
     'X-Content-Type-Options': 'nosniff',
     'X-Robots-Tag': 'noindex, nofollow',
   }
