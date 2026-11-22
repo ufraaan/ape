@@ -7,7 +7,6 @@
   --border: #d5d8dc;
   --line: #ebecef;
   --focus: #37639b;
-  --action: #244c80;
   --action-bg: #edf3fc;
   --danger: #a12528;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -241,14 +240,9 @@ select,
   background: #f2f3f5;
 }
 
-.button.primary {
-  border-color: #bacce5;
-  background: var(--action-bg);
-  color: var(--action);
-}
-
-.button.primary:hover {
-  background: #e1ebfa;
+.form-actions .button {
+  min-block-size: 2rem;
+  padding: 0 0.6rem;
 }
 
 .button.danger {

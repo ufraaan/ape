@@ -129,7 +129,7 @@ ${body}</textarea>
               )}</select>
             </span>
           </div>
-          <button class="button primary" type="submit" data-submit>create paste</button>
+          <button class="button" type="submit" data-submit>create paste</button>
         </div>
       </form>
     </main>`,
