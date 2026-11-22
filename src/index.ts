@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
-import { createPaste, getPaste, purgeExpired, type PasteDatabase } from './store'
+import { PasteStore } from './store'
 import { renderCompose, renderNotice, renderPaste } from './views'
 
 type RateLimiter = {
@@ -9,7 +9,7 @@ type RateLimiter = {
 }
 
 type Bindings = {
-  DB: PasteDatabase
+  PASTES: DurableObjectNamespace<PasteStore>
   TURNSTILE_SITE_KEY?: string
   TURNSTILE_SECRET_KEY?: string
   CREATE_RATE_LIMIT?: RateLimiter
@@ -29,11 +29,14 @@ const MAX_PASTE_BYTES = 64 * 1024
 const MAX_FORM_BYTES = MAX_PASTE_BYTES * 3 + 4096
 const TTL_SECONDS = { '1h': 3600, '1d': 86400, '7d': 604800 } as const
 const DEFAULT_TTL = '1d'
-// six-character ids are new; 22-character base64url ids are existing rows
-const PASTE_ID = /^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_-]{22})$/
+const PASTE_ID = /^[A-Za-z0-9]{6}$/
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
 const app = new Hono<{ Bindings: Bindings; Variables: { turnstile: TurnstileKeys } }>()
+
+function pasteStore(env: Bindings): DurableObjectStub<PasteStore> {
+  return env.PASTES.get(env.PASTES.idFromName('pastes'))
+}
 
 function turnstileKeys(env: Bindings): TurnstileKeys | null {
   const siteKey = env.TURNSTILE_SITE_KEY?.trim() || undefined
@@ -197,10 +200,7 @@ async function readNotLimited(c: AppContext): Promise<Response | null> {
 async function findPaste(c: AppContext) {
   const id = c.req.param('id') ?? ''
   if (!PASTE_ID.test(id)) return null
-  const paste = await getPaste(c.env.DB, id)
-  if (!paste) return null
-  if (paste.expiresAt <= Math.floor(Date.now() / 1000)) return null
-  return paste
+  return pasteStore(c.env).get(id)
 }
 
 async function verifyTurnstile(secret: string, token: string, remoteIp?: string): Promise<boolean> {
@@ -276,7 +276,7 @@ app.post('/pastes', async (c) => {
     }
   }
 
-  const paste = await createPaste(c.env.DB, body, ttl.seconds)
+  const paste = await pasteStore(c.env).create(body, ttl.seconds)
   c.header('Cache-Control', 'no-store')
   return c.redirect(`/${paste.id}`, 303)
 })
@@ -319,9 +319,6 @@ app.onError((error, c) => {
   return notice(c, 503, 'service unavailable', 'something went wrong. please try again shortly.')
 })
 
-export default {
-  fetch: app.fetch,
-  scheduled: async (_event: { cron: string; scheduledTime: number }, env: Bindings) => {
-    await purgeExpired(env.DB)
-  },
-}
+export { PasteStore } from './store'
+
+export default { fetch: app.fetch }
