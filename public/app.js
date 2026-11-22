@@ -7,10 +7,10 @@ const submit = document.querySelector('[data-submit]')
 
 function renderMeter(value) {
   const bytes = new TextEncoder().encode(value).length
-  const size = bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KiB`
+  const size = bytes < 1024 ? `${bytes} ${bytes === 1 ? 'byte' : 'bytes'}` : `${(bytes / 1024).toFixed(1)} kib`
   const over = bytes > MAX_BYTES
   if (count) {
-    count.textContent = bytes === 0 ? '64 KiB max' : `${size} / 64 KiB${over ? ' (over limit)' : ''}`
+    count.textContent = bytes === 0 ? '64 kib max' : `${size} / 64 kib${over ? ' (over limit)' : ''}`
     count.toggleAttribute('data-over', over)
   }
   if (field) {
@@ -40,7 +40,7 @@ if (field) {
     sending = true
     if (submit) {
       submit.setAttribute('data-busy', '')
-      submit.textContent = 'Creating paste'
+      submit.textContent = 'creating paste'
     }
   })
 
@@ -48,7 +48,7 @@ if (field) {
     sending = false
     if (submit) {
       submit.removeAttribute('data-busy')
-      submit.textContent = 'Create paste'
+      submit.textContent = 'create paste'
     }
   })
 }
@@ -90,12 +90,12 @@ async function copy(button, target, command) {
 
   try {
     await navigator.clipboard.writeText(text)
-    report(button, 'Copied')
+    report(button, 'copied')
   } catch {
     if (command === '--copy-link') {
-      report(button, 'Copy failed. Open the paste title to get its link.')
+      report(button, 'copy failed. open the paste title to get its link.')
     } else {
-      report(button, 'Copy failed. Copy the selected text.')
+      report(button, 'copy failed. copy the selected text.')
       selectText(target)
     }
   }

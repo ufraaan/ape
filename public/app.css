@@ -78,6 +78,9 @@ a {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 1.125rem;
   font-weight: 650;
   letter-spacing: -0.04em;
@@ -247,8 +250,30 @@ select,
   cursor: progress;
 }
 
-select {
+.expiry-select {
+  display: inline-grid;
+  align-items: center;
+  position: relative;
+}
+
+.expiry-select::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 0.7rem;
+  inline-size: 0.4rem;
+  block-size: 0.4rem;
+  border-inline-end: 1px solid currentColor;
+  border-block-end: 1px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+  pointer-events: none;
+}
+
+.expiry-select select {
+  appearance: none;
+  padding: 0 1.45rem;
   font-size: 1rem;
+  text-align: center;
+  text-align-last: center;
 }
 
 .paste-head {

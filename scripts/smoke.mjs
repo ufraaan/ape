@@ -148,7 +148,7 @@ check((await fetch(`${BASE}/p/${deletableId}`)).status === 200, 'wrong token lea
 
 const deleted = await post(`/p/${deletableId}/delete`, { token: deletableToken })
 check(deleted.status === 200, `delete: expected 200, got ${deleted.status}`)
-check((await deleted.text()).includes('Paste deleted'), 'delete confirms removal')
+check((await deleted.text()).includes('paste deleted'), 'delete confirms removal')
 await expect404(`/p/${deletableId}`, 'deleted paste view')
 await expect404(`/p/${deletableId}/raw`, 'deleted paste raw')
 const replayed = await post(`/p/${deletableId}/delete`, { token: deletableToken })
@@ -158,7 +158,7 @@ await replayed.arrayBuffer()
 const abuse = await fetch(`${BASE}/abuse`)
 const abuseHtml = await abuse.text()
 check(abuse.status === 200, `abuse page: expected 200, got ${abuse.status}`)
-check(abuseHtml.includes('Report abuse'), 'abuse page explains how to report')
+check(abuseHtml.includes('report abuse'), 'abuse page explains how to report')
 if (ABUSE_EMAIL) {
   check(abuseHtml.includes(`mailto:${ABUSE_EMAIL}`), 'abuse page shows the configured contact')
 }
@@ -166,7 +166,7 @@ if (ABUSE_EMAIL) {
 for (const [path, type] of [
   ['/app.css', 'text/css'],
   ['/app.js', 'text/javascript'],
-  ['/favicon.svg', 'image/svg+xml'],
+  ['/ape-logo.webp', 'image/webp'],
 ]) {
   const asset = await fetch(BASE + path)
   check(asset.status === 200, `${path}: expected 200, got ${asset.status}`)

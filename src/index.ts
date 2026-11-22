@@ -152,13 +152,13 @@ async function readForm(c: AppContext): Promise<URLSearchParams | Response> {
     return notice(
       c,
       415,
-      'Unsupported request',
-      'Submit this form from the paste page in your browser.',
+      'unsupported request',
+      'submit this form from the paste page in your browser.',
     )
   }
   const text = await readCapped(c.req.raw, MAX_FORM_BYTES)
   if (text === null) {
-    return notice(c, 413, 'Paste too large', 'Pastes are limited to 64 KiB of UTF-8 text.')
+    return notice(c, 413, 'paste too large', 'pastes are limited to 64 kib of utf-8 text.')
   }
   return new URLSearchParams(text)
 }
@@ -202,8 +202,8 @@ app.use('*', async (c, next) => {
     return notice(
       c,
       503,
-      'Service unavailable',
-      'This paste service is misconfigured. Please try again later.',
+      'service unavailable',
+      'this paste service is misconfigured. please try again later.',
     )
   }
   c.set('turnstile', keys)
@@ -217,7 +217,7 @@ app.get('/', (c) => {
 
 app.post('/pastes', async (c) => {
   if (!isSameOrigin(c.req.raw)) {
-    return notice(c, 403, 'Request blocked', 'Cross-site form submissions are not allowed.')
+    return notice(c, 403, 'request blocked', 'cross-site form submissions are not allowed.')
   }
 
   const ip = c.req.header('cf-connecting-ip')
@@ -227,8 +227,8 @@ app.post('/pastes', async (c) => {
       return notice(
         c,
         429,
-        'Too many pastes',
-        'Please wait a moment before creating another paste.',
+        'too many pastes',
+        'please wait a moment before creating another paste.',
       )
     }
   }
@@ -239,17 +239,17 @@ app.post('/pastes', async (c) => {
   const body = form.get('body') ?? ''
   const ttl = parseTtl(form.get('ttl'))
   if (new TextEncoder().encode(body).byteLength > MAX_PASTE_BYTES) {
-    return compose(c, 413, body, ttl.label, 'Pastes are limited to 64 KiB of UTF-8 text.')
+    return compose(c, 413, body, ttl.label, 'pastes are limited to 64 kib of utf-8 text.')
   }
   if (!body.trim()) {
-    return compose(c, 400, undefined, ttl.label, 'Write something before creating a paste.')
+    return compose(c, 400, undefined, ttl.label, 'write something before creating a paste.')
   }
 
   const { secretKey, siteKey } = c.get('turnstile')
   if (secretKey) {
     const token = form.get('cf-turnstile-response') ?? ''
     if (!token || !(await verifyTurnstile(secretKey, token, ip))) {
-      return compose(c, 400, body, ttl.label, 'Verification failed. Please try again.')
+      return compose(c, 400, body, ttl.label, 'verification failed. please try again.')
     }
   }
 
@@ -270,7 +270,7 @@ app.post('/pastes', async (c) => {
 app.get('/p/:id/raw', async (c) => {
   const paste = await findPaste(c)
   if (!paste) {
-    return notice(c, 404, 'Paste not found', 'This paste does not exist or has expired.')
+    return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
   }
   return c.text(paste.body, 200, rawHeaders())
 })
@@ -278,7 +278,7 @@ app.get('/p/:id/raw', async (c) => {
 app.get('/p/:id', async (c) => {
   const paste = await findPaste(c)
   if (!paste) {
-    return notice(c, 404, 'Paste not found', 'This paste does not exist or has expired.')
+    return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
   }
   return page(
     c,
@@ -289,7 +289,7 @@ app.get('/p/:id', async (c) => {
 
 app.post('/p/:id/delete', async (c) => {
   if (!isSameOrigin(c.req.raw)) {
-    return notice(c, 403, 'Request blocked', 'Cross-site form submissions are not allowed.')
+    return notice(c, 403, 'request blocked', 'cross-site form submissions are not allowed.')
   }
   const form = await readForm(c)
   if (form instanceof Response) return form
@@ -297,13 +297,13 @@ app.post('/p/:id/delete', async (c) => {
   const id = c.req.param('id') ?? ''
   const token = form.get('token') ?? ''
   if (!OPAQUE_ID.test(id) || !OPAQUE_ID.test(token)) {
-    return notice(c, 404, 'Paste not found', 'This paste does not exist or was already deleted.')
+    return notice(c, 404, 'paste not found', 'this paste does not exist or was already deleted.')
   }
   const deleted = await deletePaste(c.env.DB, id, token)
   if (!deleted) {
-    return notice(c, 404, 'Paste not found', 'This paste does not exist or was already deleted.')
+    return notice(c, 404, 'paste not found', 'this paste does not exist or was already deleted.')
   }
-  return notice(c, 200, 'Paste deleted', 'The paste and its contents have been removed.')
+  return notice(c, 200, 'paste deleted', 'the paste and its contents have been removed.')
 })
 
 app.get('/abuse', (c) => {
@@ -311,19 +311,19 @@ app.get('/abuse', (c) => {
     c,
     200,
     renderNotice({
-      title: 'Report abuse',
+      title: 'report abuse',
       message:
-        'Pastes are submitted by users and are not reviewed before publication. To report illegal or abusive content, include the paste link and a short description.',
+        'pastes are submitted by users and are not reviewed before publication. to report illegal or abusive content, include the paste link and a short description.',
       abuseEmail: c.env.ABUSE_EMAIL,
     }),
   )
 })
 
-app.notFound((c) => notice(c, 404, 'Not found', 'The page you requested does not exist.'))
+app.notFound((c) => notice(c, 404, 'not found', 'the page you requested does not exist.'))
 
 app.onError((error, c) => {
   console.error('request failed:', error instanceof Error ? error.message : error)
-  return notice(c, 503, 'Service unavailable', 'Something went wrong. Please try again shortly.')
+  return notice(c, 503, 'service unavailable', 'something went wrong. please try again shortly.')
 })
 
 export default {
