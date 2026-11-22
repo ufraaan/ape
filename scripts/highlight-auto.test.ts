@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { detectLanguage, highlight } from './highlight-auto.js'
+import { detectLanguage, highlight } from './highlight-auto.ts'
 
 const python = `import json
 from pathlib import Path

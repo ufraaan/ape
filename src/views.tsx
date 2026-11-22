@@ -81,14 +81,14 @@ function page(options: {
       ? html`<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`
       : ''}
   </head>
-  <body>
+  <body class="flex min-h-svh flex-col bg-canvas font-sans text-[0.9375rem]/[1.55] text-ink">
     <a class="skip" href="#main">skip to content</a>
-    <header class="wrap masthead">
-      <a class="brand" href="/"><img src="/ape-logo.webp" width="28" height="28" alt="" />ape</a>
+    <header class="mx-auto flex min-h-16 w-[min(48rem,100%_-_2.5rem)] items-center justify-between border-b border-line">
+      <a class="brand inline-flex items-center gap-[0.4rem] text-[1.125rem] font-[650] tracking-[-0.04em] no-underline" href="/"><img src="/ape-logo.webp" width="28" height="28" alt="" />ape</a>
       ${options.canonicalPath || options.showNewPaste ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
     </header>
     ${options.main}
-    ${options.reportHref ? html`<footer class="wrap footer">
+    ${options.reportHref ? html`<footer class="mx-auto mt-auto flex w-[min(48rem,100%_-_2.5rem)] justify-end">
       <a class="quiet-link" href="${options.reportHref}" data-report-abuse>report abuse</a>
     </footer>` : ''}
   </body>
@@ -104,20 +104,21 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
     title: 'new paste · ape',
     turnstileSiteKey: options.turnstileSiteKey,
     reportHref: options.reportHref,
-    main: html`<main id="main" class="wrap main">
+    main: html`<main id="main" class="mx-auto w-[min(48rem,100%_-_2.5rem)] pt-[clamp(2rem,5vw,4rem)] pb-8">
       <h1>new paste</h1>
-      <p class="subhead" id="visibility">anyone with the link can read it.</p>
-      <form method="post" action="/pastes">
-        ${options.error ? html`<p id="paste-error" class="error" role="alert">${options.error}</p>` : ''}
-        <div class="editor-meta">
-          <span class="editor-capacity" tabindex="0" aria-describedby="byte-estimate">
-            <span id="byte-count" data-count ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
-            <span class="editor-tooltip" id="byte-estimate" role="tooltip">about 820 lines of code at 80 bytes per line</span>
+      <p class="subhead mt-[0.4rem] text-muted" id="visibility">anyone with the link can read it.</p>
+      <form method="post" action="/pastes" class="mt-3">
+        ${options.error ? html`<p id="paste-error" class="mt-0 mb-3 text-danger" role="alert">${options.error}</p>` : ''}
+        <div class="mb-[0.35rem] flex justify-end text-[0.75rem] text-muted tabular-nums">
+          <span class="editor-capacity relative cursor-help" tabindex="0" aria-describedby="byte-estimate">
+            <span id="byte-count" data-count class="data-over:text-danger" ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
+            <span class="editor-tooltip absolute bottom-full end-0 z-[1] w-max max-w-[min(16rem,80vw)] rounded-[0.35rem] border border-border bg-surface px-[0.55rem] py-[0.3rem]" id="byte-estimate" role="tooltip">about 820 lines of code at 80 bytes per line</span>
           </span>
         </div>
-        <div class="editor">
-          <label class="visually-hidden" for="body">paste text</label>
+        <div class="editor rounded-[0.625rem] border border-border bg-surface">
+          <label class="sr-only" for="body">paste text</label>
           <textarea id="body" name="body" data-body autofocus required spellcheck="false"
+            class="block min-h-[clamp(15rem,43vh,28rem)] w-full resize-y rounded-[inherit] border-0 bg-transparent p-4 font-mono text-base/[1.65] tab-2 placeholder:font-sans placeholder:text-[0.875rem] placeholder:text-muted focus-visible:outline-none"
             aria-describedby="visibility byte-count${options.error ? ' paste-error' : ''}"
             ${bytes > MAX_BYTES ? html`aria-invalid="true"` : ''}
             placeholder="paste or type here"
@@ -125,20 +126,20 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
 ${body}</textarea>
         </div>
         ${options.turnstileSiteKey
-          ? html`<div class="turnstile">
+          ? html`<div class="mt-3">
               <div class="cf-turnstile" data-sitekey="${options.turnstileSiteKey}" data-theme="light" data-size="flexible"></div>
             </div>`
           : ''}
-        <div class="form-actions">
-          <div class="expiry">
-            <label for="ttl">expires</label>
-            <span class="expiry-select">
-              <select id="ttl" name="ttl">${TTL_OPTIONS.map(([value, label]) =>
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <label for="ttl" class="text-[0.8125rem] text-muted">expires</label>
+            <span class="expiry-select relative inline-grid items-center">
+              <select id="ttl" name="ttl" class="min-h-8 appearance-none py-0 pl-2 pr-[1.3rem] text-[0.875rem]">${TTL_OPTIONS.map(([value, label]) =>
                 currentOption(value, label, ttl)
               )}</select>
             </span>
           </div>
-          <button class="button" type="submit" data-submit aria-keyshortcuts="Meta+Enter Control+Enter">create paste</button>
+          <button class="button min-h-8 px-[0.6rem] py-0 font-normal" type="submit" data-submit aria-keyshortcuts="Meta+Enter Control+Enter">create paste</button>
         </div>
       </form>
     </main>`,
@@ -159,19 +160,19 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
     canonicalPath: path,
     reportHref: options.reportHref,
     highlight: true,
-    main: html`<main id="main" class="wrap main">
-      <div class="paste-head">
+    main: html`<main id="main" class="mx-auto w-[min(48rem,100%_-_2.5rem)] pt-[clamp(2rem,5vw,4rem)] pb-8">
+      <div class="flex flex-wrap items-end justify-between gap-[0.85rem]">
         <div>
-          <h1><a class="paste-title" href="${path}">paste</a></h1>
-          <p class="subhead">${expiryTime(options.expiresAt)}</p>
+          <h1><a class="paste-title no-underline" href="${path}">paste</a></h1>
+          <p class="subhead mt-[0.4rem] text-muted">${expiryTime(options.expiresAt)}</p>
         </div>
-        <div class="paste-actions">
+        <div class="flex flex-wrap items-center gap-2">
           ${copyButton('--copy-link', 'copy link', 'paste-body')}
           ${copyButton('--copy-text', 'copy text', 'paste-body')}
           <a class="button" href="${path}/raw">raw</a>
         </div>
       </div>
-      <pre class="paste-body" id="paste-body" tabindex="0" aria-label="paste text"><code data-highlight>${options.body}</code></pre>
+      <pre class="mt-5 min-h-20 rounded-[0.625rem] border border-border bg-surface p-4 font-mono text-[0.9375rem]/[1.65] whitespace-pre-wrap [overflow-wrap:anywhere] tab-2" id="paste-body" tabindex="0" aria-label="paste text"><code data-highlight class="[font:inherit]">${options.body}</code></pre>
     </main>`,
   })
 }
@@ -180,9 +181,9 @@ export function renderNotice(options: NoticeOptions): string | Promise<string> {
   return page({
     title: `${options.title} · ape`,
     showNewPaste: true,
-    main: html`<main id="main" class="wrap main notice">
+    main: html`<main id="main" class="mx-auto grid w-[min(48rem,100%_-_2.5rem)] justify-items-start gap-3 pt-[clamp(2rem,5vw,4rem)] pb-8">
       <h1>${options.title}</h1>
-      <p class="subhead">${options.message}</p>
+      <p class="subhead mt-[0.4rem] max-w-[58ch] whitespace-pre-line text-muted">${options.message}</p>
     </main>`,
   })
 }

@@ -8,5 +8,7 @@
     "skipLibCheck": true,
     "lib": ["ESNext"],
     "noEmit": true
-  }
+  },
+  "include": ["src"],
+  "exclude": ["src/client"]
 }

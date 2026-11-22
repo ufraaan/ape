@@ -1,6 +1,8 @@
 # build output
 dist/
+public/app.js
 public/vendor/
+public/app.css
 
 # deps
 node_modules/

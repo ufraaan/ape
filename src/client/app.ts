@@ -1,20 +1,28 @@
 document.documentElement.dataset.enhanced = ''
 
-const reportLink = document.querySelector('[data-report-abuse]')
-reportLink?.addEventListener('click', () => {
-  const draft = new URL(reportLink.href)
-  const subject = draft.searchParams.get('subject') ?? ''
-  const body = draft.searchParams.get('body') ?? ''
-  const updatedBody = body.replace(/^report timestamp: [^\r\n]*/m, `report timestamp: ${new Date().toISOString()}`)
-  reportLink.href = `mailto:${draft.pathname}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(updatedBody)}`
-})
+type CopyCommandEvent = Event & {
+  readonly command: string | null
+  readonly source: Element | null
+  readonly target: Element | null
+}
+
+const reportLink = document.querySelector<HTMLAnchorElement>('[data-report-abuse]')
+if (reportLink) {
+  reportLink.addEventListener('click', () => {
+    const draft = new URL(reportLink.href)
+    const subject = draft.searchParams.get('subject') ?? ''
+    const body = draft.searchParams.get('body') ?? ''
+    const updatedBody = body.replace(/^report timestamp: [^\r\n]*/m, `report timestamp: ${new Date().toISOString()}`)
+    reportLink.href = `mailto:${draft.pathname}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(updatedBody)}`
+  })
+}
 
 const MAX_BYTES = 64 * 1024
-const field = document.querySelector('[data-body]')
-const count = document.querySelector('[data-count]')
-const submit = document.querySelector('[data-submit]')
+const field = document.querySelector<HTMLTextAreaElement>('[data-body]')
+const count = document.querySelector<HTMLElement>('[data-count]')
+const submit = document.querySelector<HTMLButtonElement>('[data-submit]')
 
-function renderMeter(value) {
+function renderMeter(value: string) {
   const bytes = new TextEncoder().encode(value).length
   const size = bytes < 1024 ? `${bytes} ${bytes === 1 ? 'byte' : 'bytes'}` : `${(bytes / 1024).toFixed(1)} kib`
   const over = bytes > MAX_BYTES
@@ -69,8 +77,8 @@ if (field) {
   })
 }
 
-const timers = new WeakMap()
-function report(button, message) {
+const timers = new WeakMap<Element, number>()
+function report(button: Element, message: string) {
   const tip = button.parentElement?.querySelector('[role="status"]')
   if (!tip) return
   clearTimeout(timers.get(button))
@@ -84,7 +92,7 @@ function report(button, message) {
   )
 }
 
-function selectText(target) {
+function selectText(target: Element) {
   const range = document.createRange()
   range.selectNodeContents(target)
   const selection = getSelection()
@@ -93,14 +101,16 @@ function selectText(target) {
   selection.addRange(range)
 }
 
-async function copy(button, target, command) {
+async function copy(button: Element, target: Element | null, command: string) {
   let text = ''
   if (command === '--copy-link') {
     const canonical = document.querySelector('link[rel="canonical"]')
     const href = canonical?.getAttribute('href')
     text = href ? new URL(href, location.origin).href : location.origin + location.pathname
   } else if (target) {
-    text = target.matches('input, textarea') ? target.value : target.textContent ?? ''
+    text = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+      ? target.value
+      : target.textContent ?? ''
   }
   if (!text) return
 
@@ -112,7 +122,7 @@ async function copy(button, target, command) {
       report(button, 'copy failed. open the paste title to get its link.')
     } else {
       report(button, 'copy failed. copy the selected text.')
-      selectText(target)
+      if (target) selectText(target)
     }
   }
 }
@@ -120,17 +130,20 @@ async function copy(button, target, command) {
 document.addEventListener(
   'command',
   (event) => {
-    if (!event.command?.startsWith('--copy')) return
-    copy(event.source, event.target, event.command)
+    const { command, source, target } = event as CopyCommandEvent
+    if (!command?.startsWith('--copy') || !source) return
+    copy(source, target, command)
   },
   true
 )
 
 if (!('CommandEvent' in window)) {
   document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return
     const button = event.target.closest('button[command^="--copy"]')
     if (!button) return
-    const target = document.getElementById(button.getAttribute('commandfor'))
-    copy(button, target, button.getAttribute('command'))
+    const commandFor = button.getAttribute('commandfor')
+    const target = commandFor ? document.getElementById(commandFor) : null
+    copy(button, target, button.getAttribute('command') ?? '')
   })
 }
