@@ -1,4 +1,4 @@
-@layer theme, base, components, utilities;
+@layer theme, base, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
@@ -8,6 +8,10 @@
 @theme {
   --font-sans: Saira, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --text-title: clamp(1.625rem, 1.35rem + 1vw, 2rem);
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.045em;
+  --text-title--font-weight: 620;
   --color-canvas: #fafafa;
   --color-surface: #fff;
   --color-ink: #202124;
@@ -35,27 +39,11 @@
     box-sizing: border-box;
   }
 
-  body {
-    margin: 0;
-  }
-
+  body,
   h1,
-  h2,
   p,
   pre {
     margin: 0;
-  }
-
-  h1 {
-    font-size: clamp(1.625rem, 1.35rem + 1vw, 2rem);
-    font-weight: 620;
-    letter-spacing: -0.045em;
-    line-height: 1.2;
-  }
-
-  h2 {
-    font-size: 0.875rem;
-    font-weight: 600;
   }
 
   button,
@@ -68,7 +56,6 @@
 
   a {
     color: inherit;
-    text-underline-offset: 0.18em;
   }
 
   :focus-visible {
@@ -77,91 +64,7 @@
   }
 }
 
-@layer components {
-  .brand img {
-    filter: grayscale(1);
-  }
-
-  @media (hover: hover) {
-    .brand:hover img {
-      filter: none;
-    }
-  }
-
-  .quiet-link {
-    @apply inline-flex min-h-11 items-center text-[0.8125rem] text-muted no-underline;
-  }
-
-  .quiet-link:hover,
-  .paste-title:hover {
-    text-decoration-line: underline;
-  }
-
-  .button,
-  select {
-    @apply min-h-11 rounded-[0.45rem] border border-border bg-surface px-3 py-[0.45rem];
-  }
-
-  .button {
-    @apply inline-flex cursor-pointer items-center justify-center text-[0.875rem] leading-[1.25] font-[550] whitespace-nowrap no-underline;
-  }
-
-  .button:hover {
-    @apply bg-[#f2f3f5];
-  }
-
-  .button[data-busy] {
-    @apply cursor-progress opacity-75;
-  }
-
-  .expiry-select::after {
-    content: "";
-    position: absolute;
-    inset-inline-end: 0.55rem;
-    inline-size: 0.4rem;
-    block-size: 0.4rem;
-    border-inline-end: 1px solid currentColor;
-    border-block-end: 1px solid currentColor;
-    transform: translateY(-25%) rotate(45deg);
-    pointer-events: none;
-  }
-
-  .editor-tooltip {
-    visibility: hidden;
-  }
-
-  .editor-capacity:hover .editor-tooltip,
-  .editor-capacity:focus .editor-tooltip {
-    visibility: visible;
-  }
-
-  .copy {
-    @apply relative hidden;
-  }
-
-  [data-enhanced] .copy {
-    @apply inline-flex;
-  }
-
-  .tip:not(:empty) {
-    @apply absolute bottom-[calc(100%_+_0.3rem)] start-0 z-[1] w-max max-w-44 rounded-[0.35rem] border border-border bg-surface px-[0.55rem] py-[0.35rem] text-[0.75rem];
-  }
-
-  @media (forced-colors: active) {
-    .editor:focus-within {
-      outline: 2px solid Highlight;
-    }
-  }
-
-  .skip:not(:focus) {
-    @apply sr-only;
-  }
-
-  .skip:focus {
-    @apply absolute top-2 left-2 z-[1] bg-surface px-[0.8rem] py-[0.55rem];
-  }
-}
-
+/* prism adds these token classes at runtime, so their colors stay here */
 .token.comment,
 .token.prolog,
 .token.doctype,

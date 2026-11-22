@@ -218,15 +218,15 @@ if (ABUSE_EMAIL) {
   check(draft?.pathname === ABUSE_EMAIL, 'home report addresses the configured contact')
   check(draft?.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
   check(
-    /<footer[\s\S]*?<a class="quiet-link" href="mailto:[^"]+" data-report-abuse>report abuse<\/a>[\s\S]*?<\/footer>/.test(homeHtml),
+    /<footer[\s\S]*?<a [^>]*href="mailto:[^"]+" data-report-abuse>report abuse<\/a>[\s\S]*?<\/footer>/.test(homeHtml),
     'home footer reports abuse by mail',
   )
 }
 check(!homeHtml.includes('href="/abuse"'), 'home does not link to the removed abuse page')
 check(home.status === 200, `home: expected 200, got ${home.status}`)
-check(homeHtml.includes('<h1>new paste</h1>'), 'home keeps the compose heading')
+check(/<h1[^>]*>new paste<\/h1>/.test(homeHtml), 'home keeps the compose heading')
 check(homeHtml.includes('action="/pastes"'), 'home keeps the create form')
-check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does not duplicate the new paste link')
+check(!homeHtml.includes('href="/">new paste'), 'home does not duplicate the new paste link')
 check(!homeHtml.includes('/vendor/prism.js'), 'compose does not load the highlighter')
 check(homeHtml.includes('property="og:image" content="https://ape.ufraan.dev/og.jpg"'), 'compose links the og image')
 check(homeHtml.includes('name="twitter:card" content="summary_large_image"'), 'compose sets the twitter card')
