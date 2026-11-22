@@ -1,3 +1,11 @@
+@font-face {
+  font-family: Saira;
+  src: url("/fonts/saira-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   --canvas: #fafafa;
@@ -8,6 +16,7 @@
   --line: #ebecef;
   --focus: #37639b;
   --danger: #a12528;
+  --sans: Saira, system-ui, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
@@ -22,7 +31,7 @@ body {
   flex-direction: column;
   background: var(--canvas);
   color: var(--ink);
-  font: 0.9375rem/1.55 system-ui, sans-serif;
+  font: 0.9375rem/1.55 var(--sans);
 }
 
 h1, h2, p, pre {
@@ -159,6 +168,8 @@ textarea:focus-visible {
 
 textarea::placeholder {
   color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.875rem;
 }
 
 .editor-meta {

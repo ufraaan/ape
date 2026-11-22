@@ -60,6 +60,7 @@ function pageHeaders(turnstile: boolean): Record<string, string> {
       "frame-ancestors 'none'",
       "img-src 'self' data:",
       "style-src 'self'",
+      "font-src 'self'",
       script,
       frame,
       connect,

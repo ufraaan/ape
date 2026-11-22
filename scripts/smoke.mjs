@@ -246,6 +246,7 @@ check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does no
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
 check(homeCsp.includes("style-src 'self'"), 'CSP allows the self-hosted stylesheet')
+check(homeCsp.includes("font-src 'self'"), 'CSP allows the self-hosted font')
 check(homeCsp.includes("img-src 'self' data:"), 'CSP allows self-hosted and data images')
 check(!homeCsp.includes('unsafe-inline'), 'CSP does not allow inline code')
 
