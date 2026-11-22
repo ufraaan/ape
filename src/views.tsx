@@ -115,7 +115,7 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
         </div>
         <div class="editor">
           <label class="visually-hidden" for="body">paste text</label>
-          <textarea id="body" name="body" data-body required spellcheck="false"
+          <textarea id="body" name="body" data-body autofocus required spellcheck="false"
             aria-describedby="visibility byte-count${options.error ? ' paste-error' : ''}"
             ${bytes > MAX_BYTES ? html`aria-invalid="true"` : ''}
             placeholder="paste or type here"
