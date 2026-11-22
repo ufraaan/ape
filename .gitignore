@@ -1,0 +1,23 @@
+# build output
+dist/
+
+# deps
+node_modules/
+
+# local dev state
+.wrangler/
+
+# env
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# misc
+.DS_Store
