@@ -33,6 +33,12 @@
       }
     }
   ],
+  "routes": [
+    {
+      "pattern": "ape.ufraan.dev",
+      "custom_domain": true
+    }
+  ],
   "triggers": {
     "crons": ["17 * * * *"]
   },
@@ -40,7 +46,7 @@
     {
       "binding": "DB",
       "database_name": "ape",
-      "database_id": "",
+      "database_id": "000d5e97-1297-4e0a-9522-df00ec27c165",
       "migrations_dir": "migrations"
     }
   ]
