@@ -73,7 +73,7 @@ check(id !== 'pastes', 'generated ids avoid the create route word')
 const page = await fetch(`${BASE}/${id}`)
 const pageHtml = await page.text()
 check(page.status === 200, `view: expected 200, got ${page.status}`)
-check(page.headers.get('x-robots-tag') === 'noindex, nofollow', 'paste pages are noindex')
+check(page.headers.get('x-robots-tag') === null, 'paste pages allow indexing')
 check(page.headers.get('cache-control') === 'no-store', 'paste pages are not cached')
 check(!pageHtml.includes('<script>alert("xss")</script>'), 'view escapes script markup')
 check(!pageHtml.includes('<img src=x onerror'), 'view escapes attribute-breakout markup')
@@ -109,6 +109,8 @@ const rawBytes = new Uint8Array(await raw.arrayBuffer())
 check(raw.status === 200, `raw: expected 200, got ${raw.status}`)
 check(raw.headers.get('content-type') === 'text/plain; charset=utf-8', 'raw is plain utf-8 text')
 check(new TextDecoder().decode(rawBytes) === mainBody, 'raw returns the exact bytes that were stored')
+
+check(raw.headers.get('x-robots-tag') === null, 'raw pastes allow indexing')
 
 const independentRaw = await fetch(`${BASE}/${id}/raw`)
 const independentBytes = new Uint8Array(await independentRaw.arrayBuffer())
@@ -210,7 +212,12 @@ check(highlighter.includes('languages.c='), 'highlighter bundles the c grammar')
 check(highlighter.includes('languages.python='), 'highlighter bundles the python grammar')
 check(!highlighter.includes('hljs-'), 'highlighter is not the old highlight.js bundle')
 
+const robots = await fetch(BASE + '/robots.txt')
+check(robots.status === 200, 'robots.txt is available')
+check((await robots.text()).trim() === 'User-agent: *\nAllow: /', 'robots.txt allows all crawlers')
+
 const home = await fetch(BASE + '/')
+check(home.headers.get('x-robots-tag') === null, 'home allows indexing')
 const homeCsp = home.headers.get('content-security-policy') ?? ''
 const homeHtml = await home.text()
 if (ABUSE_EMAIL) {

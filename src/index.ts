@@ -70,7 +70,6 @@ function pageHeaders(turnstile: boolean): Record<string, string> {
     ].join('; '),
     'Referrer-Policy': 'same-origin',
     'X-Content-Type-Options': 'nosniff',
-    'X-Robots-Tag': 'noindex, nofollow',
   }
 }
 
@@ -81,7 +80,6 @@ function rawHeaders(): Record<string, string> {
     'Cache-Control': 'no-store',
     'Referrer-Policy': 'no-referrer',
     'X-Content-Type-Options': 'nosniff',
-    'X-Robots-Tag': 'noindex, nofollow',
   }
 }
 
