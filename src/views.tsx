@@ -20,8 +20,6 @@ export interface PasteOptions {
 export interface NoticeOptions {
   title: string
   message: string
-  abuseEmail?: string
-  reportHref?: string
 }
 
 const TTL_OPTIONS = [
@@ -64,7 +62,6 @@ function page(options: {
   turnstileSiteKey?: string
   canonicalPath?: string
   reportHref?: string
-  hideReportLink?: boolean
   showNewPaste?: boolean
 }): Markup {
   return html`<!doctype html>
@@ -89,9 +86,9 @@ function page(options: {
       ${options.canonicalPath || options.showNewPaste ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
     </header>
     ${options.main}
-    ${options.hideReportLink ? '' : html`<footer class="wrap footer">
-      <a class="quiet-link" href="${options.reportHref ?? '/abuse'}">report abuse</a>
-    </footer>`}
+    ${options.reportHref ? html`<footer class="wrap footer">
+      <a class="quiet-link" href="${options.reportHref}">report abuse</a>
+    </footer>` : ''}
   </body>
 </html>`
 }
@@ -176,15 +173,10 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
 export function renderNotice(options: NoticeOptions): string | Promise<string> {
   return page({
     title: `${options.title} · ape`,
-    reportHref: options.reportHref,
-    hideReportLink: Boolean(options.abuseEmail),
     showNewPaste: true,
     main: html`<main id="main" class="wrap main notice">
       <h1>${options.title}</h1>
       <p class="subhead">${options.message}</p>
-      ${options.abuseEmail && options.reportHref
-        ? html`<a class="button" href="${options.reportHref}">report</a>`
-        : ''}
     </main>`,
   })
 }

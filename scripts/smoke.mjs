@@ -154,18 +154,7 @@ for (const path of [`/${id}/delete`, `/p/${id}/delete`]) {
 }
 check((await fetch(`${BASE}/${id}`)).status === 200, 'paste stays available until it expires')
 
-const abuse = await fetch(`${BASE}/abuse`)
-const abuseHtml = await abuse.text()
-check(abuse.status === 200, `abuse page: expected 200, got ${abuse.status}`)
-check(abuseHtml.includes('report abuse'), 'abuse page explains how to report')
-if (ABUSE_EMAIL) {
-  check(reportDraft(abuseHtml)?.pathname === ABUSE_EMAIL, 'abuse page shows the configured contact')
-  check(!abuseHtml.includes(`>${ABUSE_EMAIL}<`), 'abuse page does not print the contact email')
-  check(
-    /<a class="button" href="mailto:[^"]+">report<\/a>/.test(abuseHtml),
-    'abuse page offers a report button',
-  )
-}
+await expect404('/abuse', 'abuse page')
 
 const missingHtml = await (await fetch(`${BASE}/doesnotexist1`)).text()
 check((missingHtml.match(/>new paste<\/a>/g) ?? []).length === 1, 'notice page exposes one new paste link')
@@ -198,7 +187,12 @@ if (ABUSE_EMAIL) {
   const draft = reportDraft(homeHtml)
   check(draft?.pathname === ABUSE_EMAIL, 'home report addresses the configured contact')
   check(draft.searchParams.get('body')?.startsWith('paste link: \r\n'), 'home report leaves the link blank')
+  check(
+    /<footer[\s\S]*?<a class="quiet-link" href="mailto:[^"]+">report abuse<\/a>[\s\S]*?<\/footer>/.test(homeHtml),
+    'home footer reports abuse by mail',
+  )
 }
+check(!homeHtml.includes('href="/abuse"'), 'home does not link to the removed abuse page')
 check(home.status === 200, `home: expected 200, got ${home.status}`)
 check(homeHtml.includes('<h1>new paste</h1>'), 'home keeps the compose heading')
 check(homeHtml.includes('action="/pastes"'), 'home keeps the create form')

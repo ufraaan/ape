@@ -104,7 +104,7 @@ function notice(
   title: string,
   message: string,
 ): Promise<Response> {
-  return page(c, status, renderNotice({ title, message, reportHref: abuseReportHref(c) }))
+  return page(c, status, renderNotice({ title, message }))
 }
 
 function compose(
@@ -284,22 +284,6 @@ app.get('/:id/raw', async (c) => {
     return notice(c, 404, 'paste not found', 'this paste does not exist or has expired.')
   }
   return c.text(paste.body, 200, rawHeaders())
-})
-
-app.get('/abuse', (c) => {
-  const abuseEmail = c.env.ABUSE_EMAIL?.trim()
-  return page(
-    c,
-    200,
-    renderNotice({
-      title: 'report abuse',
-      message: abuseEmail
-        ? 'send the paste link and a short description by email.'
-        : 'abuse reporting is unavailable because a contact email has not been configured.',
-      abuseEmail,
-      reportHref: abuseReportHref(c),
-    }),
-  )
 })
 
 app.get('/:id', async (c) => {

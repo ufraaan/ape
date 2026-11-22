@@ -230,8 +230,7 @@ select {
   background: #f2f3f5;
 }
 
-.form-actions .button,
-.notice .button {
+.form-actions .button {
   min-block-size: 2rem;
   padding: 0 0.6rem;
 }
