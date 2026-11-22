@@ -8,7 +8,7 @@
     "build:scripts": "node scripts/build-scripts.ts",
     "build:styles": "tailwindcss -i ./src/styles.css -o ./public/app.css --minify",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.client.json",
-    "test": "node --test scripts/highlight-auto.test.ts",
+    "test": "node --test scripts/prism-auto.test.ts",
     "smoke": "node scripts/smoke.ts"
   },
   "dependencies": {
@@ -18,7 +18,7 @@
     "@tailwindcss/cli": "^4.3.5",
     "@types/node": "^26.6.6",
     "esbuild": "^0.28.2",
-    "highlight.js": "^11.12.0",
+    "prismjs": "^1.30.0",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
     "wrangler": "^4.166.0"

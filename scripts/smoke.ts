@@ -79,16 +79,18 @@ check(!pageHtml.includes(mainBody), 'view does not echo the raw body')
 check(!pageHtml.includes('deletion token'), 'view has no deletion token')
 check(pageHtml.includes(`<link rel="canonical" href="/${id}" />`), 'view declares the short url as canonical')
 check(pageHtml.includes('data-highlight'), 'view marks the code block for highlighting')
-check(pageHtml.includes('src="/vendor/highlight.js"'), 'view loads the local highlighter')
+check(pageHtml.includes('src="/vendor/prism.js"'), 'view loads the local highlighter')
 if (ABUSE_EMAIL) {
   const draft = reportDraft(pageHtml)
   check(draft?.pathname === ABUSE_EMAIL, 'paste report addresses the configured contact')
   check(draft?.searchParams.get('subject') === 'ape abuse report', 'paste report has a subject')
+  const reportBody = draft?.searchParams.get('body') ?? ''
   check(
-    draft?.searchParams.get('body')?.startsWith(`paste link: ${new URL(`/${id}`, BASE).href}\r\n`),
+    reportBody.startsWith('paste link: ') &&
+      new URL(reportBody.split('\r\n')[0].slice('paste link: '.length)).pathname === `/${id}`,
     'paste report includes the canonical url',
   )
-  const timestamp = draft?.searchParams.get('body')?.match(/^report timestamp: ([^\r\n]+)/m)?.[1]
+  const timestamp = reportBody.match(/^report timestamp: ([^\r\n]+)/m)?.[1]
   check(timestamp && Math.abs(Date.now() - Date.parse(timestamp)) < 60_000, 'paste report includes a fresh timestamp')
 }
 
@@ -219,7 +221,7 @@ check(
 for (const [path, type] of [
   ['/app.css', 'text/css'],
   ['/app.js', 'text/javascript'],
-  ['/vendor/highlight.js', 'text/javascript'],
+  ['/vendor/prism.js', 'text/javascript'],
   ['/ape-logo.webp', 'image/webp'],
 ]) {
   const asset = await fetch(BASE + path)
@@ -233,6 +235,14 @@ for (const [path, type] of [
 
 const appJs = await (await fetch(`${BASE}/app.js`)).text()
 check(appJs.includes('link[rel="canonical"]'), 'copy link reads the canonical url')
+
+const themeCss = await (await fetch(`${BASE}/app.css`)).text()
+check(themeCss.includes('.token.keyword'), 'theme colours highlighted tokens')
+
+const highlighter = await (await fetch(`${BASE}/vendor/prism.js`)).text()
+check(highlighter.includes('languages.c='), 'highlighter bundles the c grammar')
+check(highlighter.includes('languages.python='), 'highlighter bundles the python grammar')
+check(!highlighter.includes('hljs-'), 'highlighter is not the old highlight.js bundle')
 
 const home = await fetch(BASE + '/')
 const homeCsp = home.headers.get('content-security-policy') ?? ''
@@ -251,7 +261,7 @@ check(home.status === 200, `home: expected 200, got ${home.status}`)
 check(homeHtml.includes('<h1>new paste</h1>'), 'home keeps the compose heading')
 check(homeHtml.includes('action="/pastes"'), 'home keeps the create form')
 check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does not duplicate the new paste link')
-check(!homeHtml.includes('/vendor/highlight.js'), 'compose does not load the highlighter')
+check(!homeHtml.includes('/vendor/prism.js'), 'compose does not load the highlighter')
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
 check(homeCsp.includes("style-src 'self'"), 'CSP allows the self-hosted stylesheet')

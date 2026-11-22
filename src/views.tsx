@@ -75,7 +75,7 @@ function page(options: {
     ${options.canonicalPath ? html`<link rel="canonical" href="${options.canonicalPath}" />` : ''}
     <link rel="icon" href="/ape-logo.webp" type="image/webp" />
     <link rel="stylesheet" href="/app.css" />
-    ${options.highlight ? html`<script src="/vendor/highlight.js" defer></script>` : ''}
+    ${options.highlight ? html`<script src="/vendor/prism.js" defer></script>` : ''}
     <script src="/app.js" defer></script>
     ${options.turnstileSiteKey
       ? html`<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`

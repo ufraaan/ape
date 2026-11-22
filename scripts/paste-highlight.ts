@@ -1,4 +1,4 @@
-import { highlight } from './highlight-auto.ts'
+import { highlight } from './prism-auto.ts'
 
 const block = document.querySelector<HTMLElement>('[data-highlight]')
 if (block) {
