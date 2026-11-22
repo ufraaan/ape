@@ -8,6 +8,8 @@ a small pastebin for sharing plain text, built on [cloudflare workers](https://w
 
 ## deployments
 
+install dependencies with bun 1.4.5 using `bun install --frozen-lockfile`. scripts and wrangler run on node 26.
+
 pushes to `main` run type checking, tests, and a build in github actions, then deploy to [ape.ufraan.dev](https://ape.ufraan.dev/). pull requests run the same checks without deploying. the workflow also supports manual runs from `main`.
 
 deployment uses the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. to roll back a code change, revert its commit on `main`; the next successful workflow deploys the revert. durable object data is preserved.
