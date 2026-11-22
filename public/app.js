@@ -11,7 +11,6 @@ function renderCount(value) {
   const over = bytes > MAX_BYTES
   count.textContent = over ? `${kib} KiB of 64 KiB (over limit)` : `${kib} KiB of 64 KiB`
   count.toggleAttribute('data-over', over)
-  submit.disabled = over
   if (over) field.setAttribute('aria-invalid', 'true')
   else field.removeAttribute('aria-invalid')
 }
