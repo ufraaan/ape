@@ -54,9 +54,9 @@ function expiryTime(expiresAt: number): Markup {
 }
 
 function copyButton(command: string, label: string, targetId: string): Markup {
-  return html`<span class="copy">
-    <button class="button" type="button" command="${command}" commandfor="${targetId}">${label}</button>
-    <span class="tip" role="status"></span>
+  return html`<span class="relative hidden [[data-enhanced]_&]:inline-flex">
+    <button class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-[0.45rem] border border-border bg-surface px-3 py-[0.45rem] text-[0.875rem] leading-[1.25] font-[550] whitespace-nowrap no-underline hover:bg-[#f2f3f5]" type="button" command="${command}" commandfor="${targetId}">${label}</button>
+    <span class="absolute bottom-[calc(100%_+_0.3rem)] start-0 z-[1] w-max max-w-44 rounded-[0.35rem] border border-border bg-surface px-[0.55rem] py-[0.35rem] text-[0.75rem] empty:hidden" role="status"></span>
   </span>`
 }
 
@@ -103,15 +103,15 @@ function page(options: {
       : ''}
   </head>
   <body class="flex min-h-svh flex-col bg-canvas font-sans text-[0.9375rem]/[1.55] text-ink">
-    <a class="skip" href="#main">skip to content</a>
+    <a class="not-focus:sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[1] focus:bg-surface focus:px-[0.8rem] focus:py-[0.55rem] underline underline-offset-[0.18em]" href="#main">skip to content</a>
     <header class="mx-auto flex min-h-16 w-[min(48rem,100%_-_2.5rem)] items-center justify-between border-b border-line">
-      <a class="brand inline-flex items-center gap-[0.4rem] text-[1.125rem] font-[650] tracking-[-0.04em] no-underline" href="/"><img src="/ape-logo.webp" width="28" height="28" alt="" />ape</a>
-      ${options.canonicalPath || options.showNewPaste ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
+      <a class="group inline-flex items-center gap-[0.4rem] text-[1.125rem] font-[650] tracking-[-0.04em] no-underline" href="/"><img class="grayscale group-hover:grayscale-0" src="/ape-logo.webp" width="28" height="28" alt="" />ape</a>
+      ${options.canonicalPath || options.showNewPaste ? html`<a class="inline-flex min-h-11 items-center text-[0.8125rem] text-muted no-underline underline-offset-[0.18em] hover:underline" href="/">new paste</a>` : ''}
     </header>
     ${options.main}
     ${options.reportHref || options.linkCount !== undefined ? html`<footer class="mx-auto mt-auto flex w-[min(48rem,100%_-_2.5rem)] items-center justify-end gap-3 text-[0.8125rem] text-muted">
       ${options.linkCount !== undefined ? html`<p class="me-auto tabular-nums">${countFormat.format(options.linkCount)} links made so far.</p>` : ''}
-      ${options.reportHref ? html`<a class="quiet-link" href="${options.reportHref}" data-report-abuse>report abuse</a>` : ''}
+      ${options.reportHref ? html`<a class="inline-flex min-h-11 items-center text-[0.8125rem] text-muted no-underline underline-offset-[0.18em] hover:underline" href="${options.reportHref}" data-report-abuse>report abuse</a>` : ''}
     </footer>` : ''}
   </body>
 </html>`
@@ -128,17 +128,17 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
     reportHref: options.reportHref,
     linkCount: options.linkCount,
     main: html`<main id="main" class="mx-auto w-[min(48rem,100%_-_2.5rem)] pt-[clamp(2rem,5vw,4rem)] pb-8">
-      <h1>new paste</h1>
+      <h1 class="text-title">new paste</h1>
       <p class="subhead mt-[0.4rem] text-muted" id="visibility">anyone with the link can read it.</p>
       <form method="post" action="/pastes" class="mt-3">
         ${options.error ? html`<p id="paste-error" class="mt-0 mb-3 text-danger" role="alert">${options.error}</p>` : ''}
         <div class="mb-[0.35rem] flex justify-end text-[0.75rem] text-muted tabular-nums">
-          <span class="editor-capacity relative cursor-help" tabindex="0" aria-describedby="byte-estimate">
+          <span class="group relative cursor-help" tabindex="0" aria-describedby="byte-estimate">
             <span id="byte-count" data-count class="data-over:text-danger" ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
-            <span class="editor-tooltip absolute bottom-full end-0 z-[1] w-max max-w-[min(16rem,80vw)] rounded-[0.35rem] border border-border bg-surface px-[0.55rem] py-[0.3rem]" id="byte-estimate" role="tooltip">about 820 lines of code at 80 bytes per line</span>
+            <span class="invisible absolute bottom-full end-0 z-[1] w-max max-w-[min(16rem,80vw)] rounded-[0.35rem] border border-border bg-surface px-[0.55rem] py-[0.3rem] group-hover:visible group-focus:visible" id="byte-estimate" role="tooltip">about 820 lines of code at 80 bytes per line</span>
           </span>
         </div>
-        <div class="editor rounded-[0.625rem] border border-border bg-surface">
+        <div class="rounded-[0.625rem] border border-border bg-surface forced-colors:focus-within:[outline:2px_solid_Highlight]">
           <label class="sr-only" for="body">paste text</label>
           <textarea id="body" name="body" data-body autofocus required spellcheck="false"
             class="block min-h-[clamp(15rem,43vh,28rem)] w-full resize-y rounded-[inherit] border-0 bg-transparent p-4 font-mono text-base/[1.65] tab-2 placeholder:font-sans placeholder:text-[0.875rem] placeholder:text-muted focus-visible:outline-none"
@@ -156,13 +156,13 @@ ${body}</textarea>
         <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-2">
             <label for="ttl" class="text-[0.8125rem] text-muted">expires</label>
-            <span class="expiry-select relative inline-grid items-center">
-              <select id="ttl" name="ttl" class="min-h-8 appearance-none py-0 pl-2 pr-[1.3rem] text-[0.875rem]">${TTL_OPTIONS.map(([value, label]) =>
+            <span class="relative inline-grid items-center after:pointer-events-none after:absolute after:end-[0.55rem] after:block after:size-[0.4rem] after:-translate-y-1/4 after:rotate-45 after:border-e after:border-b after:border-current after:content-['']">
+              <select id="ttl" name="ttl" class="min-h-8 appearance-none rounded-[0.45rem] border border-border bg-surface py-0 pr-[1.3rem] pl-2 text-[0.875rem]">${TTL_OPTIONS.map(([value, label]) =>
                 currentOption(value, label, ttl)
               )}</select>
             </span>
           </div>
-          <button class="button min-h-8 px-[0.6rem] py-0 font-normal" type="submit" data-submit aria-keyshortcuts="Meta+Enter Control+Enter">create paste</button>
+          <button class="inline-flex min-h-8 cursor-pointer items-center justify-center rounded-[0.45rem] border border-border bg-surface px-[0.6rem] py-0 text-[0.875rem] leading-[1.25] font-normal whitespace-nowrap no-underline hover:bg-[#f2f3f5] data-busy:cursor-progress data-busy:opacity-75" type="submit" data-submit aria-keyshortcuts="Meta+Enter Control+Enter">create paste</button>
         </div>
       </form>
     </main>`,
@@ -186,13 +186,13 @@ export function renderPaste(options: PasteOptions): string | Promise<string> {
     main: html`<main id="main" class="mx-auto w-[min(48rem,100%_-_2.5rem)] pt-[clamp(2rem,5vw,4rem)] pb-8">
       <div class="flex flex-wrap items-end justify-between gap-[0.85rem]">
         <div>
-          <h1><a class="paste-title no-underline" href="${path}">paste</a></h1>
+          <h1 class="text-title"><a class="no-underline" href="${path}">paste</a></h1>
           <p class="subhead mt-[0.4rem] text-muted">${expiryTime(options.expiresAt)}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           ${copyButton('--copy-link', 'copy link', 'paste-body')}
           ${copyButton('--copy-text', 'copy text', 'paste-body')}
-          <a class="button" href="${path}/raw">raw</a>
+          <a class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-[0.45rem] border border-border bg-surface px-3 py-[0.45rem] text-[0.875rem] leading-[1.25] font-[550] whitespace-nowrap no-underline hover:bg-[#f2f3f5]" href="${path}/raw">raw</a>
         </div>
       </div>
       <pre class="mt-5 min-h-20 rounded-[0.625rem] border border-border bg-surface p-4 font-mono text-[0.9375rem]/[1.65] whitespace-pre-wrap [overflow-wrap:anywhere] tab-2" id="paste-body" tabindex="0" aria-label="paste text"><code data-highlight class="[font:inherit]">${options.body}</code></pre>
@@ -205,7 +205,7 @@ export function renderNotice(options: NoticeOptions): string | Promise<string> {
     title: `${options.title} · ape`,
     showNewPaste: true,
     main: html`<main id="main" class="mx-auto grid w-[min(48rem,100%_-_2.5rem)] justify-items-start gap-3 pt-[clamp(2rem,5vw,4rem)] pb-8">
-      <h1>${options.title}</h1>
+      <h1 class="text-title">${options.title}</h1>
       <p class="subhead mt-[0.4rem] max-w-[58ch] whitespace-pre-line text-muted">${options.message}</p>
     </main>`,
   })
