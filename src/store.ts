@@ -70,20 +70,25 @@ export class PasteStore extends DurableObject {
     const expiresAt = createdAt + Math.ceil(ttlSeconds)
     for (let attempt = 0; attempt < INSERT_ATTEMPTS; attempt++) {
       const id = randomId()
-      const inserted = this.ctx.storage.sql
-        .exec(
-          'INSERT INTO pastes (id, body, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING RETURNING id',
-          id,
-          body,
-          createdAt,
-          expiresAt,
-        )
-        .toArray()
+      const inserted = this.ctx.storage.transactionSync(() => {
+        const rows = this.ctx.storage.sql
+          .exec(
+            'INSERT INTO pastes (id, body, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING RETURNING id',
+            id,
+            body,
+            createdAt,
+            expiresAt,
+          )
+          .toArray()
+        if (rows.length > 0) {
+          this.ctx.storage.sql.exec(
+            'UPDATE stats SET value = value + 1 WHERE name = ?',
+            CREATED_COUNTER,
+          )
+        }
+        return rows
+      })
       if (inserted.length > 0) {
-        this.ctx.storage.sql.exec(
-          'UPDATE stats SET value = value + 1 WHERE name = ?',
-          CREATED_COUNTER,
-        )
         const alarm = await this.ctx.storage.getAlarm()
         if (alarm === null || alarm > expiresAt * 1000) {
           await this.ctx.storage.setAlarm(expiresAt * 1000)
