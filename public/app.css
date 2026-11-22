@@ -131,7 +131,7 @@ h2 {
 }
 
 .main > form {
-  margin-block-start: 1.5rem;
+  margin-block-start: 0.75rem;
 }
 
 .editor {
@@ -144,9 +144,9 @@ textarea {
   display: block;
   inline-size: 100%;
   min-block-size: clamp(15rem, 43vh, 28rem);
-  padding: 0.25rem 1rem 1rem;
+  padding: 1rem;
   border: 0;
-  border-radius: 0 0 0.625rem 0.625rem;
+  border-radius: inherit;
   background: transparent;
   font: 1rem/1.65 var(--mono);
   resize: vertical;
@@ -164,7 +164,7 @@ textarea::placeholder {
 .editor-meta {
   display: flex;
   justify-content: flex-end;
-  padding: 0.45rem 0.85rem 0;
+  margin-block-end: 0.35rem;
   color: var(--muted);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;

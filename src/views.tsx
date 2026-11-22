@@ -107,10 +107,10 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
       <p class="subhead" id="visibility">anyone with the link can read it.</p>
       <form method="post" action="/pastes">
         ${options.error ? html`<p id="paste-error" class="error" role="alert">${options.error}</p>` : ''}
+        <div class="editor-meta">
+          <span id="byte-count" data-count ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
+        </div>
         <div class="editor">
-          <div class="editor-meta">
-            <span id="byte-count" data-count ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
-          </div>
           <label class="visually-hidden" for="body">paste text</label>
           <textarea id="body" name="body" data-body required spellcheck="false"
             aria-describedby="visibility byte-count${options.error ? ' paste-error' : ''}"
