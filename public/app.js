@@ -1,23 +1,17 @@
 document.documentElement.dataset.enhanced = ''
-document.documentElement.classList.add('m-enter')
 
 const MAX_BYTES = 64 * 1024
 const field = document.querySelector('[data-body]')
 const count = document.querySelector('[data-count]')
-const lines = document.querySelector('[data-lines]')
 const submit = document.querySelector('[data-submit]')
 
 function renderMeter(value) {
   const bytes = new TextEncoder().encode(value).length
-  const kib = (bytes / 1024).toFixed(1)
+  const size = bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KiB`
   const over = bytes > MAX_BYTES
   if (count) {
-    count.textContent = over ? `${kib} KiB of 64 KiB (over limit)` : `${kib} KiB of 64 KiB`
+    count.textContent = bytes === 0 ? '64 KiB max' : `${size} / 64 KiB${over ? ' (over limit)' : ''}`
     count.toggleAttribute('data-over', over)
-  }
-  if (lines) {
-    const total = value === '' ? 0 : value.split('\n').length
-    lines.textContent = `${total} ${total === 1 ? 'line' : 'lines'}`
   }
   if (field) {
     if (over) field.setAttribute('aria-invalid', 'true')
@@ -43,7 +37,6 @@ if (field) {
       event.preventDefault()
       return
     }
-    if (!field.form.checkValidity()) return
     sending = true
     if (submit) {
       submit.setAttribute('data-busy', '')
@@ -61,29 +54,17 @@ if (field) {
 }
 
 const timers = new WeakMap()
-let lastMessage = ''
-
-function report(button, message, ok) {
+function report(button, message) {
   const tip = button.parentElement?.querySelector('[role="status"]')
   if (!tip) return
   clearTimeout(timers.get(button))
-  button.removeAttribute('data-copied')
-  button.removeAttribute('data-failed')
-  if (message === lastMessage) message += '\u00A0'
-  lastMessage = message
   tip.textContent = ''
-  void button.offsetWidth
-  button.setAttribute(ok ? 'data-copied' : 'data-failed', '')
   requestAnimationFrame(() => {
     tip.textContent = message
   })
   timers.set(
     button,
-    setTimeout(() => {
-      button.removeAttribute('data-copied')
-      button.removeAttribute('data-failed')
-      tip.textContent = ''
-    }, 2200)
+    setTimeout(() => { tip.textContent = '' }, 4000)
   )
 }
 
@@ -109,14 +90,14 @@ async function copy(button, target, command) {
 
   try {
     await navigator.clipboard.writeText(text)
-    report(button, 'Copied', true)
+    report(button, 'Copied')
   } catch {
-    report(
-      button,
-      command === '--copy-link' ? 'Copy failed. Copy the link from the address bar.' : 'Copy failed. Select the text and copy it.',
-      false
-    )
-    if (target && !target.matches('input, textarea')) selectText(target)
+    if (command === '--copy-link') {
+      report(button, 'Copy failed. Open the paste title to get its link.')
+    } else {
+      report(button, 'Copy failed. Copy the selected text.')
+      selectText(target)
+    }
   }
 }
 
