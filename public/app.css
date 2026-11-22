@@ -186,6 +186,29 @@ textarea::placeholder {
   color: var(--danger);
 }
 
+.editor-capacity {
+  position: relative;
+}
+
+.editor-tooltip {
+  position: absolute;
+  inset-block-end: 100%;
+  inset-inline-end: 0;
+  z-index: 1;
+  inline-size: max-content;
+  max-inline-size: min(16rem, 80vw);
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface);
+  visibility: hidden;
+}
+
+.editor-capacity:hover .editor-tooltip,
+.editor-capacity:focus .editor-tooltip {
+  visibility: visible;
+}
+
 .error {
   margin-block: 0 0.75rem;
 }

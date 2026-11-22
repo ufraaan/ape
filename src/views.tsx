@@ -108,7 +108,10 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
       <form method="post" action="/pastes">
         ${options.error ? html`<p id="paste-error" class="error" role="alert">${options.error}</p>` : ''}
         <div class="editor-meta">
-          <span id="byte-count" data-count ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
+          <span class="editor-capacity" tabindex="0" aria-describedby="byte-estimate">
+            <span id="byte-count" data-count ${bytes > MAX_BYTES ? html`data-over` : ''}>${sizeLabel(bytes)}</span>
+            <span class="editor-tooltip" id="byte-estimate" role="tooltip">about 820 lines of code at 80 bytes per line</span>
+          </span>
         </div>
         <div class="editor">
           <label class="visually-hidden" for="body">paste text</label>
