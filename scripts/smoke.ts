@@ -183,6 +183,7 @@ for (const [path, type] of [
   ['/app.js', 'text/javascript'],
   ['/vendor/prism.js', 'text/javascript'],
   ['/ape-logo.webp', 'image/webp'],
+  ['/og.jpg', 'image/jpeg'],
 ]) {
   const asset = await fetch(BASE + path)
   check(asset.status === 200, `${path}: expected 200, got ${asset.status}`)
@@ -222,6 +223,8 @@ check(homeHtml.includes('<h1>new paste</h1>'), 'home keeps the compose heading')
 check(homeHtml.includes('action="/pastes"'), 'home keeps the create form')
 check(!homeHtml.includes('class="quiet-link" href="/">new paste'), 'home does not duplicate the new paste link')
 check(!homeHtml.includes('/vendor/prism.js'), 'compose does not load the highlighter')
+check(homeHtml.includes('property="og:image" content="https://ape.ufraan.dev/og.jpg"'), 'compose links the og image')
+check(homeHtml.includes('name="twitter:card" content="summary_large_image"'), 'compose sets the twitter card')
 check(homeCsp.includes("default-src 'none'"), 'CSP blocks unrelated origins by default')
 check(homeCsp.includes("script-src 'self'"), 'CSP allows the self-hosted script')
 check(homeCsp.includes("style-src 'self'"), 'CSP allows the self-hosted stylesheet')
