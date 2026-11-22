@@ -8,6 +8,7 @@ export interface ComposeOptions {
   error?: string
   turnstileSiteKey?: string
   reportHref?: string
+  linkCount?: number
 }
 
 export interface PasteOptions {
@@ -30,6 +31,7 @@ const TTL_OPTIONS = [
 
 const MAX_BYTES = 64 * 1024
 const encoder = new TextEncoder()
+const countFormat = new Intl.NumberFormat('en-US')
 const ORIGIN = 'https://ape.ufraan.dev'
 const DESCRIPTION = 'paste it. share it. gone. anonymous pastes with expiring links — no account, no tracking.'
 
@@ -64,6 +66,7 @@ function page(options: {
   turnstileSiteKey?: string
   canonicalPath?: string
   reportHref?: string
+  linkCount?: number
   showNewPaste?: boolean
   highlight?: boolean
 }): Markup {
@@ -106,8 +109,9 @@ function page(options: {
       ${options.canonicalPath || options.showNewPaste ? html`<a class="quiet-link" href="/">new paste</a>` : ''}
     </header>
     ${options.main}
-    ${options.reportHref ? html`<footer class="mx-auto mt-auto flex w-[min(48rem,100%_-_2.5rem)] justify-end">
-      <a class="quiet-link" href="${options.reportHref}" data-report-abuse>report abuse</a>
+    ${options.reportHref || options.linkCount !== undefined ? html`<footer class="mx-auto mt-auto flex w-[min(48rem,100%_-_2.5rem)] items-center justify-end gap-3 text-[0.8125rem] text-muted">
+      ${options.linkCount !== undefined ? html`<p class="me-auto tabular-nums">${countFormat.format(options.linkCount)} links made so far.</p>` : ''}
+      ${options.reportHref ? html`<a class="quiet-link" href="${options.reportHref}" data-report-abuse>report abuse</a>` : ''}
     </footer>` : ''}
   </body>
 </html>`
@@ -122,6 +126,7 @@ export function renderCompose(options: ComposeOptions = {}): string | Promise<st
     title: 'new paste · ape',
     turnstileSiteKey: options.turnstileSiteKey,
     reportHref: options.reportHref,
+    linkCount: options.linkCount,
     main: html`<main id="main" class="mx-auto w-[min(48rem,100%_-_2.5rem)] pt-[clamp(2rem,5vw,4rem)] pb-8">
       <h1>new paste</h1>
       <p class="subhead mt-[0.4rem] text-muted" id="visibility">anyone with the link can read it.</p>

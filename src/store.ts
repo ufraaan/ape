@@ -6,6 +6,7 @@ const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 const BASE62_LIMIT = 248
 const RESERVED_IDS = new Set(['pastes'])
 const INSERT_ATTEMPTS = 5
+const CREATED_COUNTER = 'pastes_created'
 
 export interface Paste {
   id: string
@@ -50,6 +51,14 @@ export class PasteStore extends DurableObject {
         expires_at INTEGER NOT NULL
       )`)
       ctx.storage.sql.exec('CREATE INDEX IF NOT EXISTS idx_pastes_expires_at ON pastes (expires_at)')
+      ctx.storage.sql.exec(`CREATE TABLE IF NOT EXISTS stats (
+        name TEXT PRIMARY KEY NOT NULL,
+        value INTEGER NOT NULL
+      )`)
+      ctx.storage.sql.exec(
+        'INSERT INTO stats (name, value) VALUES (?, 0) ON CONFLICT(name) DO NOTHING',
+        CREATED_COUNTER,
+      )
     })
   }
 
@@ -61,15 +70,24 @@ export class PasteStore extends DurableObject {
     const expiresAt = createdAt + Math.ceil(ttlSeconds)
     for (let attempt = 0; attempt < INSERT_ATTEMPTS; attempt++) {
       const id = randomId()
-      const inserted = this.ctx.storage.sql
-        .exec(
-          'INSERT INTO pastes (id, body, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING RETURNING id',
-          id,
-          body,
-          createdAt,
-          expiresAt,
-        )
-        .toArray()
+      const inserted = this.ctx.storage.transactionSync(() => {
+        const rows = this.ctx.storage.sql
+          .exec(
+            'INSERT INTO pastes (id, body, created_at, expires_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO NOTHING RETURNING id',
+            id,
+            body,
+            createdAt,
+            expiresAt,
+          )
+          .toArray()
+        if (rows.length > 0) {
+          this.ctx.storage.sql.exec(
+            'UPDATE stats SET value = value + 1 WHERE name = ?',
+            CREATED_COUNTER,
+          )
+        }
+        return rows
+      })
       if (inserted.length > 0) {
         const alarm = await this.ctx.storage.getAlarm()
         if (alarm === null || alarm > expiresAt * 1000) {
@@ -80,6 +98,13 @@ export class PasteStore extends DurableObject {
     }
 
     throw new Error('could not allocate a unique paste id')
+  }
+
+  async createdCount(): Promise<number> {
+    const [row] = this.ctx.storage.sql
+      .exec<Record<'value', number>>('SELECT value FROM stats WHERE name = ?', CREATED_COUNTER)
+      .toArray()
+    return row?.value ?? 0
   }
 
   async get(id: string): Promise<Paste | null> {
