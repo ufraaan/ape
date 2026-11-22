@@ -41,6 +41,13 @@ if (field) {
   })
 
   let sending = false
+  field.addEventListener('keydown', (event) => {
+    if (event.defaultPrevented || event.isComposing || event.key !== 'Enter') return
+    if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return
+    event.preventDefault()
+    if (!event.repeat && !sending) field.form?.requestSubmit()
+  })
+
   field.form?.addEventListener('submit', (event) => {
     if (sending) {
       event.preventDefault()

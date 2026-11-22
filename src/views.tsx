@@ -136,7 +136,7 @@ ${body}</textarea>
               )}</select>
             </span>
           </div>
-          <button class="button" type="submit" data-submit>create paste</button>
+          <button class="button" type="submit" data-submit aria-keyshortcuts="Meta+Enter Control+Enter">create paste</button>
         </div>
       </form>
     </main>`,
