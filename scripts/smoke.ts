@@ -214,12 +214,17 @@ check(!highlighter.includes('hljs-'), 'highlighter is not the old highlight.js b
 
 const robots = await fetch(BASE + '/robots.txt')
 check(robots.status === 200, 'robots.txt is available')
-check((await robots.text()).trim() === 'User-agent: *\nAllow: /', 'robots.txt allows all crawlers')
+check((await robots.text()).trim() === 'User-agent: *\nAllow: /\n\nSitemap: https://ape.ufraan.dev/sitemap.xml', 'robots.txt allows all crawlers and points at the sitemap')
+
+const sitemap = await fetch(BASE + '/sitemap.xml')
+check(sitemap.status === 200, 'sitemap.xml is available')
+check((await sitemap.text()).includes('<loc>https://ape.ufraan.dev/</loc>'), 'sitemap lists the home page')
 
 const home = await fetch(BASE + '/')
 check(home.headers.get('x-robots-tag') === null, 'home allows indexing')
 const homeCsp = home.headers.get('content-security-policy') ?? ''
 const homeHtml = await home.text()
+check(homeHtml.includes('<link rel="canonical" href="/" />'), 'home declares itself canonical')
 if (ABUSE_EMAIL) {
   const draft = reportDraft(homeHtml)
   check(draft?.pathname === ABUSE_EMAIL, 'home report addresses the configured contact')

@@ -78,7 +78,7 @@ function page(options: {
     <meta name="theme-color" content="#fafafa" />
     <title>${options.title}</title>
     <meta name="description" content="${DESCRIPTION}" />
-    ${options.canonicalPath ? html`<link rel="canonical" href="${options.canonicalPath}" />` : ''}
+    <link rel="canonical" href="${options.canonicalPath ?? '/'}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ape" />
     <meta property="og:title" content="${options.title}" />
